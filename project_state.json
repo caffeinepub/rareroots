@@ -1,0 +1,389 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 7,
+  "summary": "A direct-to-consumer marketplace app (SamriddhiSrot / समृद्धिस्रोत) for ultra-rare regional Indian products. Design system: Earth Brown #8B4513 (headers/buttons), Sand Gold #DAA520 (accents/badges), Ivory Cream #FFFFF0 (background), Forest Green #228B22 (UPI/success), Kutch Indigo #4B0082 (producer brands); Poppins Bold headers, Roboto body, Playfair Display Italic taglines; 16px grid, 12px border radius, 0 4px 8px shadow. 8 screens: Splash (2s, ivory→gold gradient), Home Dashboard (fixed header, search, featured cards, region chips, bottom nav), Producer Discovery (3x2 grid cards with voice story + badges), Producer Profile (follow button, brand story, voice player, WhatsApp/Live Call actions), Product Detail (full-width image, badges, voice story player, UPI Buy Now + Custom Request WhatsApp), Producer Brand Setup (brand form + 30sec voice recorder), Checkout (Razorpay UPI, 92% direct messaging), My Collection (order cards, re-order, rate, stats). Bottom nav persists across all screens. Razorpay SDK for UPI with WhatsApp order confirmation.",
+  "architectural_notes": [
+    "Marketplace: producers set their own prices; no intermediary involved in transactions",
+    "Media-heavy: each product has an associated voice note and optional live video stream",
+    "Region-specific product availability tied to producer's location",
+    "92% producer profit model: platform takes 8% commission post-sale; first month free",
+    "Producer branding layer: each producer has a custom brand (name, logo, tagline, color) shown throughout the app",
+    "Rarity gamification: badges and FOMO countdown timers on scarce products to drive urgency",
+    "Design tokens: Earth Brown #8B4513, Sand Gold #DAA520, Ivory Cream #FFFFF0, Forest Green #228B22, Kutch Indigo #4B0082; Poppins Bold / Roboto / Playfair Display Italic; 16px grid, 12px radius, shadow 0 4px 8px rgba(0,0,0,0.1)",
+    "Payment: Razorpay SDK integration with PhonePe/GPay/Paytm/Bank UPI options; WhatsApp order confirmation after successful payment",
+    "Region filter chips include: Himalayas, Northeast, Rajasthan, Kerala, Tribal (Kerala added alongside existing four)"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Full-screen splash background with a vertical gradient from Ivory Cream #FFFFF0 at the top to Sand Gold #DAA520 at the bottom, subtle texture evoking handmade paper (splash-bg.dim_1080x1920.png)\n- Hero banner image showing an artisan market scene with warm earthy tones, Himalayan/Indian craft products displayed on a wooden stall, terracotta and gold color palette (hero-banner.dim_1440x600.png)\n- Artisan marketplace illustration card background with subtle woven texture pattern in cream and sand tones (card-texture-bg.dim_600x400.png)",
+  "existing_features": [
+    {
+      "id": "feature-implement-a-producer-dashboard-page-where-authenticated-producers-can-register-edit-their-profile-name-region-bio-photo-create-and-manage-product-listings-title-description-price-region-stock-thumbnail-upload-or-record-a-voice-note-per-product-and-manage-their-orders",
+      "title": "Implement a Producer Dashboard page where authenticated producers can register/edit their profile (name, region, bio, photo), create and manage product listings (title, description, price, region, stock, thumbnail), upload or record a voice note per product, and manage their orders.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-product-listing-page-and-product-detail-page-for-consumers-the-product-detail-page-must-prominently-display-producer-name-region-product-story-price-stock-a-playable-embedded-voice-note-player-for-the-producer-s-audio-recording-and-an-add-to-cart-buy-now-button-for-direct-purchase",
+      "title": "Build a Product Listing page and Product Detail page for consumers. The product detail page must prominently display producer name, region, product story, price, stock, a playable embedded voice note player for the producer's audio recording, and an 'Add to Cart / Buy Now' button for direct purchase.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-voice-note-recording-and-playback-feature-on-the-frontend-on-the-producer-side-allow-recording-directly-in-the-browser-mediarecorder-api-or-uploading-an-audio-file-per-product-store-the-audio-as-a-base64-encoded-blob-in-the-backend-on-the-consumer-side-render-an-audio-player-on-the-product-detail-page",
+      "title": "Implement a voice note recording and playback feature on the frontend. On the producer side, allow recording directly in the browser (MediaRecorder API) or uploading an audio file per product. Store the audio as a base64-encoded blob in the backend. On the consumer side, render an audio player on the product detail page.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-live-video-section-where-producers-can-announce-and-start-a-simulated-live-session-title-description-scheduled-time-display-an-active-live-now-badge-on-their-profile-and-product-pages-when-a-session-is-marked-active-show-a-live-sessions-listing-page-for-consumers-to-browse-ongoing-and-upcoming-streams-since-true-webrtc-streaming-is-not-supported-represent-live-sessions-via-status-cards-with-producer-details-and-a-story-description-field-that-producers-update-in-real-time",
+      "title": "Implement a Live Video section where producers can announce and start a simulated live session (title, description, scheduled time). Display an active 'Live Now' badge on their profile and product pages when a session is marked active. Show a live sessions listing page for consumers to browse ongoing and upcoming streams. Since true WebRTC/streaming is not supported, represent live sessions via status cards with producer details and a story/description field that producers update in real time.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-consumer-facing-marketplace-home-page-with-a-region-filter-category-search-bar-featured-producers-section-and-a-live-now-section-highlighting-currently-active-producer-sessions-consumers-can-browse-products-filtered-by-region",
+      "title": "Build a consumer-facing marketplace home page with a region filter, category/search bar, featured producers section, and a 'Live Now' section highlighting currently active producer sessions. Consumers can browse products filtered by region.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-simple-direct-purchase-flow-consumer-selects-a-product-specifies-quantity-confirms-purchase-and-an-order-record-is-created-in-the-backend-linking-their-principal-to-the-product-and-producer-show-an-order-confirmation-screen-and-an-order-history-page-for-consumers",
+      "title": "Implement a simple direct purchase flow: consumer selects a product, specifies quantity, confirms purchase, and an order record is created in the backend linking their principal to the product and producer. Show an order confirmation screen and an order history page for consumers.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-rich-earthy-artisan-market-visual-theme-across-the-entire-app-warm-terracotta-deep-forest-green-and-cream-tones-handcrafted-feel-typography-serif-headings-clean-sans-serif-body-textured-card-backgrounds-evoking-natural-materials-full-width-hero-imagery-and-layout-patterns-that-feel-like-an-artisan-market-stall-enforce-this-theme-consistently-across-all-pages",
+      "title": "Apply a rich, earthy artisan-market visual theme across the entire app: warm terracotta, deep forest green, and cream tones; handcrafted-feel typography (serif headings, clean sans-serif body); textured card backgrounds evoking natural materials; full-width hero imagery; and layout patterns that feel like an artisan market stall. Enforce this theme consistently across all pages.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-rarity-badge-and-fomo-countdown-timer-fields-to-the-productform-in-the-producer-dashboard-render-a-rarity-badge-label-and-a-live-countdown-timer-on-productcard-and-the-product-detail-page-when-raritybadge-or-raritycountdownend-are-set",
+      "title": "Add rarity badge and FOMO countdown timer fields to the ProductForm in the Producer Dashboard. Render a rarity badge label and a live countdown timer on ProductCard and the Product Detail page when rarityBadge or rarityCountdownEnd are set.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-producer-profile-public-page-route-producers-id-displaying-brand-logo-brand-name-follower-count-follow-unfollow-button-auto-play-voice-story-player-brand-story-text-and-a-grid-of-the-producer-s-products-styled-with-their-brand-color-include-a-live-chat-placeholder-button-non-functional-shown-as-disabled-with-coming-soon-tooltip",
+      "title": "Build a Producer Profile public page (route /producers/:id) displaying: brand logo, brand name, follower count, Follow/Unfollow button, auto-play voice story player, brand story text, and a grid of the producer's products styled with their brand color. Include a 'Live Chat' placeholder button (non-functional, shown as disabled with 'Coming Soon' tooltip).",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-my-collection-page-route-collection-for-authenticated-consumers-showing-a-personalized-header-your-rare-finds-collection-the-list-of-producers-the-consumer-follows-with-unfollow-option-order-history-re-listed-as-favorites-with-a-re-order-button-and-earned-rarity-badges-derived-from-purchased-products-that-had-a-raritybadge-require-login-to-access",
+      "title": "Build a My Collection page (route /collection) for authenticated consumers showing: a personalized header ('Your Rare Finds Collection'), the list of producers the consumer follows (with unfollow option), order history re-listed as 'favorites' with a re-order button, and earned rarity badges (derived from purchased products that had a rarityBadge). Require login to access.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-global-css-and-tailwind-config-to-enforce-the-exact-design-token-values-earth-brown-8b4513-primary-buttons-headers-sand-gold-daa520-accents-badges-ivory-cream-fffff0-background-forest-green-228b22-success-upi-actions-kutch-indigo-4b0082-producer-brand-accents-load-and-apply-poppins-bold-for-headings-24pt-28pt-48pt-as-specified-per-screen-roboto-regular-for-body-text-16pt-and-playfair-display-italic-for-taglines-14pt-20pt-enforce-16px-spacing-grid-12px-border-radius-on-all-buttons-and-cards-and-box-shadow-0px-4px-8px-rgba-0-0-0-0-1-across-all-interactive-surfaces",
+      "title": "Update the global CSS and Tailwind config to enforce the exact design token values: Earth Brown #8B4513 (primary buttons, headers), Sand Gold #DAA520 (accents, badges), Ivory Cream #FFFFF0 (background), Forest Green #228B22 (success/UPI actions), Kutch Indigo #4B0082 (producer brand accents). Load and apply Poppins Bold for headings (24pt/28pt/48pt as specified per screen), Roboto Regular for body text (16pt), and Playfair Display Italic for taglines (14pt–20pt). Enforce 16px spacing grid, 12px border radius on all buttons and cards, and box-shadow 0px 4px 8px rgba(0,0,0,0.1) across all interactive surfaces.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-full-screen-splash-screen-that-appears-for-2-seconds-on-app-launch-before-auto-redirecting-to-the-home-page-the-splash-must-display-the-logo-text-centered-at-the-top-20-in-earth-brown-8b4513-poppins-bold-48pt-the-tagline-rare-producers-direct-connection-centered-at-50-in-sand-gold-daa520-playfair-display-italic-20pt-and-at-the-bottom-20-an-earth-brown-spinning-loader-with-the-text-connecting-artisans-in-roboto-14pt-8b4513-background-is-an-ivory-cream-to-sand-gold-vertical-gradient",
+      "title": "Implement a full-screen splash screen that appears for 2 seconds on app launch before auto-redirecting to the Home page. The splash must display: the logo text 'समृद्धिस्रोत' centered at the top 20% in Earth Brown #8B4513 Poppins Bold 48pt; the tagline 'Rare Producers, Direct Connection' centered at 50% in Sand Gold #DAA520 Playfair Display Italic 20pt; and at the bottom 20% an Earth Brown spinning loader with the text 'Connecting artisans...' in Roboto 14pt #8B4513. Background is an Ivory Cream-to-Sand-Gold vertical gradient.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-redesign-the-home-dashboard-header-to-be-a-fixed-top-bar-showing-the-samriddhisrot-logo-text-in-earth-brown-8b4513-poppins-24pt-on-the-left-and-a-profile-icon-plus-cart-icon-with-item-count-on-the-right-the-search-bar-below-must-be-a-rounded-rect-white-input-with-48dp-height-and-8dp-horizontal-padding-placeholder-text-search-himalayan-herbs-kutch-crafts-in-666-roboto-16pt-featured-products-must-render-as-a-horizontally-scrollable-row-of-cards-120-160dp-image-rarity-badge-in-sand-gold-producer-name-in-8b4513-poppins-16pt-region-filter-chips-must-be-horizontal-white-background-sand-gold-border-showing-himalayas-northeast-rajasthan-kerala-tribal",
+      "title": "Redesign the Home Dashboard header to be a fixed top bar showing the 🏔️ SamriddhiSrot logo text in Earth Brown #8B4513 Poppins 24pt on the left, and a profile icon plus cart icon with item count on the right. The search bar below must be a rounded-rect white input with 48dp height and 8dp horizontal padding, placeholder text 'Search Himalayan herbs, Kutch crafts...' in #666 Roboto 16pt. Featured products must render as a horizontally scrollable row of cards (120×160dp image, rarity badge in Sand Gold, producer name in #8B4513 Poppins 16pt). Region filter chips must be horizontal, white background, Sand Gold border, showing: Himalayas | Northeast | Rajasthan | Kerala | Tribal.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-persistent-bottom-navigation-bar-across-all-app-screens-with-four-tabs-home-links-to-discover-links-to-discover-orders-links-to-orders-profile-links-to-collection-for-consumers-dashboard-for-producers-active-tab-color-is-earth-brown-8b4513-inactive-tab-color-is-666",
+      "title": "Implement a persistent bottom navigation bar across all app screens with four tabs: 🏠 Home (links to /), 🔍 Discover (links to /discover), 🛒 Orders (links to /orders), 👤 Profile (links to /collection for consumers, /dashboard for producers). Active tab color is Earth Brown #8B4513; inactive tab color is #666.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-or-update-the-producer-discovery-page-at-route-discover-as-a-3-2-grid-of-producer-cards-each-card-300-200dp-white-background-12px-radius-standard-shadow-must-show-a-circular-80dp-producer-photo-overlay-at-the-top-40-the-producer-s-brand-name-in-8b4513-poppins-bold-20pt-a-voice-story-play-button-in-sand-gold-14pt-and-a-rarity-badge-pill-in-sand-gold-at-the-bottom-include-filter-chips-at-the-top-banarasi-kutch-tribal-himalayan-northeast",
+      "title": "Build or update the Producer Discovery page at route /discover as a 3×2 grid of producer cards. Each card (300×200dp, white background, 12px radius, standard shadow) must show: a circular 80dp producer photo overlay at the top 40%; the producer's brand name in #8B4513 Poppins Bold 20pt; a 🎙️ Voice Story play button in Sand Gold 14pt; and a rarity badge pill in Sand Gold at the bottom. Include filter chips at the top: Banarasi | Kutch | Tribal | Himalayan | Northeast.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-producer-profile-public-page-producers-id-layout-to-match-the-specification-fixed-top-section-25-height-with-back-arrow-follow-button-in-sand-gold-producer-name-in-8b4513-poppins-28pt-follower-count-in-roboto-14pt-666-brand-story-section-20-shows-100-100dp-brand-logo-brand-story-text-in-italic-16pt-and-a-voice-player-bar-styled-in-earth-brown-8b4513-product-grid-40-shows-a-3-2-grid-of-product-cards-styled-with-the-producer-s-brand-color-action-buttons-at-the-bottom-15-whatsapp-chat-button-in-forest-green-228b22-and-live-call-button-in-sand-gold-daa520-the-whatsapp-chat-button-must-open-a-pre-filled-whatsapp-link-wa-me-to-the-producer-the-live-call-button-remains-a-styled-placeholder",
+      "title": "Update the Producer Profile public page (/producers/:id) layout to match the specification: fixed top section (25% height) with back arrow, Follow button in Sand Gold, producer name in #8B4513 Poppins 28pt, follower count in Roboto 14pt #666. Brand story section (20%) shows 100×100dp brand logo, brand story text in italic 16pt, and a voice player bar styled in Earth Brown #8B4513. Product grid (40%) shows a 3×2 grid of product cards styled with the producer's brand color. Action buttons at the bottom (15%): 💬 WhatsApp Chat button in Forest Green #228B22, and 📞 Live Call button in Sand Gold #DAA520. The WhatsApp Chat button must open a pre-filled WhatsApp link (wa.me) to the producer; the Live Call button remains a styled placeholder.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-product-detail-page-layout-to-match-the-specification-full-width-product-image-300-300dp-product-title-in-8b4513-poppins-bold-22pt-rarity-badge-pill-in-sand-gold-a-low-stock-warning-only-n-left-in-ff4500-with-a-blinking-animation-when-stock-is-low-price-in-228b22-poppins-28pt-product-story-description-in-roboto-italic-16pt-a-voice-origin-story-audio-player-height-48dp-background-8b4513-a-full-width-buy-now-button-56dp-height-228b22-poppins-bold-18pt-white-text-12px-radius-and-an-outlined-custom-request-button-in-sand-gold-daa520",
+      "title": "Update the Product Detail page layout to match the specification: full-width product image (300×300dp); product title in #8B4513 Poppins Bold 22pt; rarity badge pill in Sand Gold; a low-stock warning ('Only N Left') in #FF4500 with a blinking animation when stock is low; price in #228B22 Poppins 28pt; product story/description in Roboto Italic 16pt; a 🎙️ voice origin story audio player (height 48dp, background #8B4513); a full-width 'Buy Now' button (56dp height, #228B22, Poppins Bold 18pt, white text, 12px radius); and an outlined 'Custom Request' button in Sand Gold #DAA520.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-or-update-the-producer-brand-setup-screen-accessible-from-the-producer-dashboard-for-authenticated-producers-to-match-the-specification-page-header-complete-your-brand-a-form-with-1-brand-name-text-input-placeholder-laxmiloom-mountainhealer-2-brand-tagline-text-input-max-20-characters-3-brand-logo-photo-upload-button-with-camera-icon-4-brand-color-picker-5-30-second-voice-recorder-with-a-record-button-labeled-tell-your-story-and-a-full-width-save-button-at-the-bottom-in-forest-green-228b22-labeled-launch-my-brand",
+      "title": "Build or update the Producer Brand Setup screen (accessible from the Producer Dashboard for authenticated producers) to match the specification: page header 'Complete Your Brand'; a form with: (1) Brand Name text input (placeholder: LaxmiLoom / MountainHealer), (2) Brand Tagline text input (max 20 characters), (3) brand logo photo upload button with camera icon, (4) brand color picker, (5) 30-second voice recorder with a record button labeled 'Tell Your Story'; and a full-width save button at the bottom in Forest Green #228B22 labeled 'Launch My Brand'.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-purchasemodal-and-checkout-order-confirmation-ui-to-display-an-order-summary-section-showing-product-name-price-and-a-92-goes-direct-to-brandname-8-platform-fee-message-in-forest-green-228b22-a-payment-method-selector-ui-showing-phonepe-gpay-paytm-and-bank-as-options-and-a-full-width-confirm-pay-button-in-forest-green-labeled-pay-amount-56dp-height-poppins-bold-12px-radius-after-order-confirmation-display-a-whatsapp-order-tracking-prompt-linking-to-the-producer-s-whatsapp",
+      "title": "Update the PurchaseModal and Checkout/Order confirmation UI to display: an order summary section showing product name, price, and a '92% goes direct to [BrandName] (8% platform fee)' message in Forest Green #228B22; a payment method selector UI showing PhonePe, GPay, Paytm, and Bank as options; and a full-width confirm/pay button in Forest Green labeled 'Pay ₹[amount]' (56dp height, Poppins Bold, 12px radius). After order confirmation, display a WhatsApp order tracking prompt linking to the producer's WhatsApp.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-my-collection-order-history-page-to-match-the-specification-page-header-my-rare-collection-scrollable-order-cards-each-showing-a-product-thumbnail-on-the-left-product-name-producer-name-star-rating-display-up-to-5-stars-a-delivered-status-indicator-a-re-order-button-and-a-rate-producername-link-show-summary-stats-at-the-top-n-rare-finds-following-n-producers",
+      "title": "Update the My Collection / Order History page to match the specification: page header 'My Rare Collection'; scrollable order cards each showing a product thumbnail on the left, product name, producer name, star rating display (up to 5 stars), a 'Delivered ✓' status indicator, a Re-order button, and a 'Rate [ProducerName]' link. Show summary stats at the top: 'N Rare Finds | Following N Producers'.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-the-badge-pill-and-voice-player-component-specs-globally-badge-pill-auto-width-32dp-height-sand-gold-daa520-fill-poppins-12pt-text-16px-border-radius-voice-player-bar-full-width-48dp-height-earth-brown-8b4513-background-waveform-visualization-play-pause-button-and-a-timestamp-display-e-g-00-12-00-30-product-card-white-background-12px-radius-shadow-0-4px-8px-rgba-0-0-0-0-1-upi-action-buttons-full-width-56dp-height-forest-green-228b22-poppins-bold-18pt-white-text-12px-radius",
+      "title": "Apply the Badge Pill and Voice Player component specs globally: Badge Pill — auto width, 32dp height, Sand Gold #DAA520 fill, Poppins 12pt text, 16px border radius. Voice Player bar — full width, 48dp height, Earth Brown #8B4513 background, waveform visualization, play/pause button, and a timestamp display (e.g. 00:12 / 00:30). Product Card — white background, 12px radius, shadow 0 4px 8px rgba(0,0,0,0.1). UPI/action buttons — full width, 56dp height, Forest Green #228B22, Poppins Bold 18pt, white text, 12px radius.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Producer product listings with custom pricing and region-specific availability",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Voice note per product: producer records details about the product and how it was made",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Live video streaming for producers to show the production process and tell the story behind it",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Direct producer-to-consumer purchasing flow with no middlemen",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Create a backend data model and actor with stable storage for Producers (name, region, bio, profile photo URL), Products (title, description, price, region, producer ID, stock, voice note URL, thumbnail URL), Orders (product ID, buyer principal, quantity, status, timestamp), and LiveStreams (producer ID, title, status, start time). Expose CRUD endpoints for all entities.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Splash screen with समृद्धिस्रोत logo, tagline 'Rare Voices, Branded Roots', and 'Connecting to rare artisans...' loading message",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Producer Branding: custom brand name, tagline, logo upload/camera snap, brand color picker, and voice story recording on Producer Brand Setup screen",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Rarity Gamification: rarity badges (e.g. 'Himalayan Secret', 'Only 3 Left'), FOMO countdown timers on product cards and detail pages",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Producer Discovery screen: grid of producer cards showing brand name, brand logo, tagline, auto-play 30-sec voice story, rarity badges, and 'View Products' button",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Producer Profile screen: brand logo/name/followers header, auto-play voice story player, brand story text, products grid with brand styling, Follow Producer and Live Chat buttons",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Product Detail enhancements: rarity badge + countdown, brand tagline display, 'Voice Origin Story' player, UPI Buy Now button, Custom Request button",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Checkout/UPI screen: order summary with brand attribution, '92% goes direct to [BrandName]' messaging, Confirm Order button, WhatsApp Order Tracking integration",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "My Collection screen: personalized rare finds collection, re-order favorites, shareable badges earned, producer follow list",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Region filters: Himalayas, Northeast, Rajasthan, Tribal on Home/Dashboard; bottom nav: Home | Discover | Orders | Profile",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Phone number OTP authentication for both producers and consumers",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Add a 2-second splash screen as the app entry point displaying the समृद्धिस्रोत logo, the tagline 'Rare Voices, Branded Roots', and a loading message 'Connecting to rare artisans...' before auto-redirecting to the Home page.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Extend the Producer backend data model to include brand fields: brandName (Text), brandTagline (Text), brandLogoBlob (ExternalBlob/base64), brandColor (Text), and voiceStoryBlob (ExternalBlob/base64). Expose update and query endpoints for these new fields on the existing Producer actor.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Extend the Product backend data model to include rarityBadge (Text, e.g. 'Himalayan Secret', 'Desert Rarity') and rarityCountdownEnd (optional Int timestamp for FOMO timer). Expose these fields in product create/update/query endpoints.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Add a follower/following relationship to the backend: consumers can follow producers. Store follower counts on the Producer record and expose followProducer, unfollowProducer, and getFollowerCount endpoints.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Build a Producer Brand Setup screen (accessible only to authenticated producers from the Producer Dashboard) with fields: Brand Name, Brand Tagline, Brand Logo upload (file picker), Brand Color picker, and a voice story recorder (reusing VoiceNoteRecorder). On save, call the updateProducerBrand backend endpoint.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Build a Producer Discovery page (route /discover) showing a grid of producer cards. Each card displays: brand logo, brand name, brand tagline, rarity badges from their top product, a voice story play button (using VoiceNotePlayer), and a 'View Products' button linking to a filtered product listing for that producer.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Enhance the Product Detail page to display: the producer's brand tagline below the producer name, a 'Voice Origin Story' audio player section using VoiceNotePlayer, a 'Custom Request' button (opens a pre-filled mailto or a modal with a text field for the consumer to describe their custom request), and the rarity badge + countdown timer (from REQ-14).",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Update the Checkout/Order flow UI to display brand attribution: show '92% goes direct to [BrandName]' messaging on the PurchaseModal and OrderConfirmation page. Display the producer's brand name (or brand name fallback to producer name) wherever brand attribution appears.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Update the Home page region filter to include the four canonical regions: Himalayas, Northeast, Rajasthan, and Tribal (in addition to the existing 'All' option). Update the bottom navigation bar to show four tabs: Home, Discover (links to /discover), Orders (links to /orders), and Profile (links to /collection for consumers or /dashboard for producers).",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Apply full design system: Earth Brown #8B4513, Sand Gold #DAA520, Ivory Cream #FFFFF0, Forest Green #228B22, Kutch Indigo #4B0082; Poppins Bold/Roboto/Playfair Display fonts; 16px grid, 12px radius, shadow 0 4px 8px rgba(0,0,0,0.1) across all screens",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Integrate Razorpay SDK for UPI payments with PhonePe/GPay/Paytm/Bank fallback options and WhatsApp order confirmation post-payment",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Voice story auto-play on screen load (5 second delay), 30sec max length, background play supported, regional languages supported",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Add WhatsApp Chat and Live Call action buttons to Producer Profile page",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Add star rating and 'Rate Producer' functionality to My Orders/Collection page order cards",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "RareRoots",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

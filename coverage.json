@@ -1,0 +1,203 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T16:32:33.034Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 11,
+    "implemented": 11,
+    "items": [
+      {
+        "id": "REQ-21",
+        "summary": "Update the global CSS and Tailwind config to enforce the exact design token values: Earth Brown #8B4513 (primary buttons, headers), Sand Gold #DAA520 (accents, badges), Ivory Cream #FFFFF0 (background), Forest Green #228B22 (success/UPI actions), Kutch Indigo #4B0082 (producer brand accents). Load and apply Poppins Bold for headings (24pt/28pt/48pt as specified per screen), Roboto Regular for body text (16pt), and Playfair Display Italic for taglines (14pt–20pt). Enforce 16px spacing grid, 12px border radius on all buttons and cards, and box-shadow 0px 4px 8px rgba(0,0,0,0.1) across all interactive surfaces.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js"
+        ]
+      },
+      {
+        "id": "REQ-22",
+        "summary": "Implement a full-screen splash screen that appears for 2 seconds on app launch before auto-redirecting to the Home page. The splash must display: the logo text 'समृद्धिस्रोत' centered at the top 20% in Earth Brown #8B4513 Poppins Bold 48pt; the tagline 'Rare Producers, Direct Connection' centered at 50% in Sand Gold #DAA520 Playfair Display Italic 20pt; and at the bottom 20% an Earth Brown spinning loader with the text 'Connecting artisans...' in Roboto 14pt #8B4513. Background is an Ivory Cream-to-Sand-Gold vertical gradient.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/Splash.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/Splash.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-23",
+        "summary": "Redesign the Home Dashboard header to be a fixed top bar showing the 🏔️ SamriddhiSrot logo text in Earth Brown #8B4513 Poppins 24pt on the left, and a profile icon plus cart icon with item count on the right. The search bar below must be a rounded-rect white input with 48dp height and 8dp horizontal padding, placeholder text 'Search Himalayan herbs, Kutch crafts...' in #666 Roboto 16pt. Featured products must render as a horizontally scrollable row of cards (120×160dp image, rarity badge in Sand Gold, producer name in #8B4513 Poppins 16pt). Region filter chips must be horizontal, white background, Sand Gold border, showing: Himalayas | Northeast | Rajasthan | Kerala | Tribal.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/SearchBar.tsx",
+          "frontend/src/components/RegionFilter.tsx",
+          "frontend/src/components/FeaturedProducers.tsx",
+          "frontend/src/pages/Home.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/SearchBar.tsx",
+          "frontend/src/components/RegionFilter.tsx",
+          "frontend/src/components/FeaturedProducers.tsx",
+          "frontend/src/pages/Home.tsx"
+        ]
+      },
+      {
+        "id": "REQ-24",
+        "summary": "Implement a persistent bottom navigation bar across all app screens with four tabs: 🏠 Home (links to /), 🔍 Discover (links to /discover), 🛒 Orders (links to /orders), 👤 Profile (links to /collection for consumers, /dashboard for producers). Active tab color is Earth Brown #8B4513; inactive tab color is #666.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Layout.tsx"
+        ]
+      },
+      {
+        "id": "REQ-25",
+        "summary": "Build or update the Producer Discovery page at route /discover as a 3×2 grid of producer cards. Each card (300×200dp, white background, 12px radius, standard shadow) must show: a circular 80dp producer photo overlay at the top 40%; the producer's brand name in #8B4513 Poppins Bold 20pt; a 🎙️ Voice Story play button in Sand Gold 14pt; and a rarity badge pill in Sand Gold at the bottom. Include filter chips at the top: Banarasi | Kutch | Tribal | Himalayan | Northeast.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/ProducerDiscovery.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/ProducerDiscovery.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-26",
+        "summary": "Update the Producer Profile public page (/producers/:id) layout to match the specification: fixed top section (25% height) with back arrow, Follow button in Sand Gold, producer name in #8B4513 Poppins 28pt, follower count in Roboto 14pt #666. Brand story section (20%) shows 100×100dp brand logo, brand story text in italic 16pt, and a voice player bar styled in Earth Brown #8B4513. Product grid (40%) shows a 3×2 grid of product cards styled with the producer's brand color. Action buttons at the bottom (15%): 💬 WhatsApp Chat button in Forest Green #228B22, and 📞 Live Call button in Sand Gold #DAA520. The WhatsApp Chat button must open a pre-filled WhatsApp link (wa.me) to the producer; the Live Call button remains a styled placeholder.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/ProducerProfile.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/ProducerProfile.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-27",
+        "summary": "Update the Product Detail page layout to match the specification: full-width product image (300×300dp); product title in #8B4513 Poppins Bold 22pt; rarity badge pill in Sand Gold; a low-stock warning ('Only N Left') in #FF4500 with a blinking animation when stock is low; price in #228B22 Poppins 28pt; product story/description in Roboto Italic 16pt; a 🎙️ voice origin story audio player (height 48dp, background #8B4513); a full-width 'Buy Now' button (56dp height, #228B22, Poppins Bold 18pt, white text, 12px radius); and an outlined 'Custom Request' button in Sand Gold #DAA520.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/ProductDetail.tsx",
+          "frontend/src/components/PurchaseButton.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/ProductDetail.tsx",
+          "frontend/src/components/PurchaseButton.tsx"
+        ]
+      },
+      {
+        "id": "REQ-28",
+        "summary": "Build or update the Producer Brand Setup screen (accessible from the Producer Dashboard for authenticated producers) to match the specification: page header 'Complete Your Brand'; a form with: (1) Brand Name text input (placeholder: LaxmiLoom / MountainHealer), (2) Brand Tagline text input (max 20 characters), (3) brand logo photo upload button with camera icon, (4) brand color picker, (5) 30-second voice recorder with a record button labeled 'Tell Your Story'; and a full-width save button at the bottom in Forest Green #228B22 labeled 'Launch My Brand'.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/ProducerBrandSetup.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/pages/ProducerDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/ProducerBrandSetup.tsx",
+          "frontend/src/App.tsx",
+          "frontend/src/pages/ProducerDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-29",
+        "summary": "Update the PurchaseModal and Checkout/Order confirmation UI to display: an order summary section showing product name, price, and a '92% goes direct to [BrandName] (8% platform fee)' message in Forest Green #228B22; a payment method selector UI showing PhonePe, GPay, Paytm, and Bank as options; and a full-width confirm/pay button in Forest Green labeled 'Pay ₹[amount]' (56dp height, Poppins Bold, 12px radius). After order confirmation, display a WhatsApp order tracking prompt linking to the producer's WhatsApp.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/PurchaseModal.tsx",
+          "frontend/src/pages/OrderConfirmation.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/PurchaseModal.tsx",
+          "frontend/src/pages/OrderConfirmation.tsx"
+        ]
+      },
+      {
+        "id": "REQ-30",
+        "summary": "Update the My Collection / Order History page to match the specification: page header 'My Rare Collection'; scrollable order cards each showing a product thumbnail on the left, product name, producer name, star rating display (up to 5 stars), a 'Delivered ✓' status indicator, a Re-order button, and a 'Rate [ProducerName]' link. Show summary stats at the top: 'N Rare Finds | Following N Producers'.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/OrderHistory.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/OrderHistory.tsx"
+        ]
+      },
+      {
+        "id": "REQ-31",
+        "summary": "Apply the Badge Pill and Voice Player component specs globally: Badge Pill — auto width, 32dp height, Sand Gold #DAA520 fill, Poppins 12pt text, 16px border radius. Voice Player bar — full width, 48dp height, Earth Brown #8B4513 background, waveform visualization, play/pause button, and a timestamp display (e.g. 00:12 / 00:30). Product Card — white background, 12px radius, shadow 0 4px 8px rgba(0,0,0,0.1). UPI/action buttons — full width, 56dp height, Forest Green #228B22, Poppins Bold 18pt, white text, 12px radius.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/BadgePill.tsx",
+          "frontend/src/components/VoiceNotePlayer.tsx",
+          "frontend/src/components/ProductCard.tsx",
+          "frontend/src/index.css"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/BadgePill.tsx",
+          "frontend/src/components/VoiceNotePlayer.tsx",
+          "frontend/src/components/ProductCard.tsx",
+          "frontend/src/index.css"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/public/assets/generated/card-texture-bg.dim_600x400.png",
+    "frontend/public/assets/generated/hero-banner.dim_1440x600.png",
+    "frontend/public/assets/generated/splash-bg.dim_1080x1920.png",
+    "frontend/src/App.tsx",
+    "frontend/src/camera/useCamera.ts",
+    "frontend/src/components/BadgePill.tsx",
+    "frontend/src/components/FeaturedProducers.tsx",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/ProductCard.tsx",
+    "frontend/src/components/PurchaseButton.tsx",
+    "frontend/src/components/PurchaseModal.tsx",
+    "frontend/src/components/RegionFilter.tsx",
+    "frontend/src/components/SearchBar.tsx",
+    "frontend/src/components/VoiceNotePlayer.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/Home.tsx",
+    "frontend/src/pages/OrderConfirmation.tsx",
+    "frontend/src/pages/OrderHistory.tsx",
+    "frontend/src/pages/ProducerBrandSetup.tsx",
+    "frontend/src/pages/ProducerDashboard.tsx",
+    "frontend/src/pages/ProducerDiscovery.tsx",
+    "frontend/src/pages/ProducerProfile.tsx",
+    "frontend/src/pages/ProductDetail.tsx",
+    "frontend/src/pages/ProductListing.tsx",
+    "frontend/src/pages/Splash.tsx",
+    "frontend/tailwind.config.js",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

@@ -1,0 +1,316 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: oklch(99% 0.01 90);
+    --foreground: oklch(20% 0.05 30);
+    --card: oklch(100% 0 0);
+    --card-foreground: oklch(20% 0.05 30);
+    --popover: oklch(100% 0 0);
+    --popover-foreground: oklch(20% 0.05 30);
+    --primary: oklch(38% 0.12 40);
+    --primary-foreground: oklch(99% 0 0);
+    --secondary: oklch(92% 0.03 80);
+    --secondary-foreground: oklch(30% 0.05 30);
+    --muted: oklch(95% 0.02 80);
+    --muted-foreground: oklch(55% 0.03 30);
+    --accent: oklch(72% 0.14 75);
+    --accent-foreground: oklch(15% 0.05 30);
+    --destructive: oklch(55% 0.22 25);
+    --destructive-foreground: oklch(99% 0 0);
+    --success: oklch(42% 0.15 145);
+    --success-foreground: oklch(99% 0 0);
+    --brand: oklch(25% 0.18 295);
+    --border: oklch(88% 0.03 80);
+    --input: oklch(88% 0.03 80);
+    --ring: oklch(38% 0.12 40);
+    --radius: 0.75rem;
+
+    /* Exact design tokens */
+    --color-earth-brown: #8B4513;
+    --color-sand-gold: #DAA520;
+    --color-ivory-cream: #FFFFF0;
+    --color-forest-green: #228B22;
+    --color-kutch-indigo: #4B0082;
+    --color-low-stock: #FF4500;
+  }
+
+  .dark {
+    --background: oklch(15% 0.03 30);
+    --foreground: oklch(95% 0.01 80);
+    --card: oklch(20% 0.03 30);
+    --card-foreground: oklch(95% 0.01 80);
+    --popover: oklch(20% 0.03 30);
+    --popover-foreground: oklch(95% 0.01 80);
+    --primary: oklch(55% 0.14 40);
+    --primary-foreground: oklch(99% 0 0);
+    --secondary: oklch(28% 0.04 30);
+    --secondary-foreground: oklch(90% 0.01 80);
+    --muted: oklch(28% 0.04 30);
+    --muted-foreground: oklch(65% 0.03 30);
+    --accent: oklch(72% 0.14 75);
+    --accent-foreground: oklch(15% 0.05 30);
+    --destructive: oklch(55% 0.22 25);
+    --destructive-foreground: oklch(99% 0 0);
+    --success: oklch(52% 0.15 145);
+    --success-foreground: oklch(99% 0 0);
+    --brand: oklch(55% 0.18 295);
+    --border: oklch(30% 0.04 30);
+    --input: oklch(30% 0.04 30);
+    --ring: oklch(55% 0.14 40);
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    background-color: var(--color-ivory-cream);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .font-roboto {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .font-playfair {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .text-earth-brown {
+    color: var(--color-earth-brown);
+  }
+
+  .text-sand-gold {
+    color: var(--color-sand-gold);
+  }
+
+  .text-forest-green {
+    color: var(--color-forest-green);
+  }
+
+  .text-kutch-indigo {
+    color: var(--color-kutch-indigo);
+  }
+
+  .text-low-stock {
+    color: var(--color-low-stock);
+  }
+
+  .bg-earth-brown {
+    background-color: var(--color-earth-brown);
+  }
+
+  .bg-sand-gold {
+    background-color: var(--color-sand-gold);
+  }
+
+  .bg-ivory-cream {
+    background-color: var(--color-ivory-cream);
+  }
+
+  .bg-forest-green {
+    background-color: var(--color-forest-green);
+  }
+
+  .bg-kutch-indigo {
+    background-color: var(--color-kutch-indigo);
+  }
+
+  .border-sand-gold {
+    border-color: var(--color-sand-gold);
+  }
+
+  .border-earth-brown {
+    border-color: var(--color-earth-brown);
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 56px;
+    background-color: var(--color-forest-green);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-outline-gold {
+    width: 100%;
+    height: 56px;
+    background-color: transparent;
+    color: var(--color-sand-gold);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 12px;
+    border: 2px solid var(--color-sand-gold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .btn-outline-gold:hover {
+    background-color: var(--color-sand-gold);
+    color: white;
+  }
+
+  .card-shadow {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    background-color: var(--color-sand-gold);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 16px;
+    white-space: nowrap;
+  }
+
+  .voice-player-bar {
+    width: 100%;
+    height: 48px;
+    background-color: var(--color-earth-brown);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    color: white;
+  }
+
+  .region-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 16px;
+    background-color: white;
+    border: 1.5px solid var(--color-sand-gold);
+    color: var(--color-earth-brown);
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    border-radius: 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .region-chip.active {
+    background-color: var(--color-sand-gold);
+    color: white;
+    border-color: var(--color-sand-gold);
+  }
+
+  .region-chip:hover:not(.active) {
+    background-color: rgba(218, 165, 32, 0.1);
+  }
+
+  .product-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  @keyframes blink-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .animate-blink {
+    animation: blink-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes spin-cw {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner-cw {
+    animation: spin-cw 1s linear infinite;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 50;
+    box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 8px 16px;
+    color: #666;
+    font-family: 'Roboto', sans-serif;
+    font-size: 11px;
+    transition: color 0.2s;
+    text-decoration: none;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--color-earth-brown);
+  }
+
+  .bottom-nav-item:hover {
+    color: var(--color-earth-brown);
+  }
+
+  .page-content {
+    padding-bottom: 80px;
+  }
+}
