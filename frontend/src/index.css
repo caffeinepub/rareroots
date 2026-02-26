@@ -255,13 +255,25 @@
     overflow: hidden;
   }
 
+  /* Stock alert blink animation — used for low-stock indicators */
   @keyframes blink-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.04); }
   }
 
   .animate-blink {
     animation: blink-pulse 1.2s ease-in-out infinite;
+  }
+
+  /* Alias for stock alert — same animation, slightly faster for urgency */
+  @keyframes stock-alert-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    40% { opacity: 0.45; transform: scale(1.05); }
+    60% { opacity: 0.45; transform: scale(1.05); }
+  }
+
+  .animate-stock-alert {
+    animation: stock-alert-pulse 1s ease-in-out infinite;
   }
 
   @keyframes spin-cw {

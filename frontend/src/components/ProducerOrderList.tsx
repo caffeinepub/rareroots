@@ -1,133 +1,136 @@
-import React, { useState } from 'react';
-import { Package, Clock, CheckCircle, Truck, XCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Order, Product } from '../backend';
-import { OrderStatus } from '../backend';
-import { useUpdateOrderStatus } from '../hooks/useQueries';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGetOrdersByProduct, useUpdateOrderStatus } from "../hooks/useQueries";
+import type { Product, Order } from "../hooks/useQueries";
+import { OrderStatus } from "../backend";
+import BadgePill from "./BadgePill";
+import { toast } from "sonner";
 
 interface ProducerOrderListProps {
-  orders: Order[];
   products: Product[];
-  isLoading: boolean;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Pending', color: 'bg-amber-100 text-amber-800', icon: <Clock className="h-3 w-3" /> },
-  confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800', icon: <CheckCircle className="h-3 w-3" /> },
-  shipped: { label: 'Shipped', color: 'bg-purple-100 text-purple-800', icon: <Truck className="h-3 w-3" /> },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: <CheckCircle className="h-3 w-3" /> },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: <XCircle className="h-3 w-3" /> },
+const STATUS_COLORS: Record<string, "gold" | "green" | "indigo" | "red"> = {
+  pending: "gold",
+  confirmed: "indigo",
+  shipped: "indigo",
+  delivered: "green",
+  cancelled: "red",
 };
 
-export default function ProducerOrderList({ orders, products, isLoading }: ProducerOrderListProps) {
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+function OrderRow({ order }: { order: Order }) {
   const updateStatus = useUpdateOrderStatus();
-  const productMap = new Map(products.map((p) => [p.id, p]));
 
-  const filteredOrders = filterStatus === 'all'
-    ? orders
-    : orders.filter((o) => o.status === filterStatus);
-
-  const handleStatusUpdate = async (orderId: string, status: OrderStatus) => {
+  const handleStatusChange = async (status: string) => {
     try {
-      await updateStatus.mutateAsync({ id: orderId, status });
-      toast.success('Order status updated.');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update status.');
+      await updateStatus.mutateAsync({
+        id: order.id,
+        status: status as OrderStatus,
+      });
+      toast.success("Order status updated");
+    } catch {
+      toast.error("Failed to update status");
     }
   };
 
-  const formatDate = (time: bigint) => {
-    return new Date(Number(time) / 1_000_000).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-    });
-  };
+  return (
+    <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-earthBrown/10 shadow-sm">
+      <div className="flex-1 min-w-0">
+        <p className="font-poppins text-xs font-semibold text-earthBrown truncate">
+          Order #{order.id.slice(-8)}
+        </p>
+        <p className="font-roboto text-xs text-earthBrown/60">
+          Qty: {Number(order.quantity)} ·{" "}
+          {new Date(Number(order.timestamp) / 1_000_000).toLocaleDateString("en-IN")}
+        </p>
+      </div>
+      <BadgePill variant={STATUS_COLORS[order.status] || "gold"} size="sm">
+        {order.status}
+      </BadgePill>
+      <Select value={order.status} onValueChange={handleStatusChange}>
+        <SelectTrigger className="w-28 h-7 text-xs border-earthBrown/20 shrink-0">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.values(OrderStatus).map((s) => (
+            <SelectItem key={s} value={s} className="text-xs">
+              {s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function ProductOrders({ product }: { product: Product }) {
+  const { data: orders = [], isLoading } = useGetOrdersByProduct(product.id);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Loader2 size={18} className="animate-spin text-earthBrown" />
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <p className="text-xs text-earthBrown/50 font-roboto py-2 text-center">
+        No orders for this product
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {orders.map((order) => (
+        <OrderRow key={order.id} order={order} />
+      ))}
+    </div>
+  );
+}
+
+export default function ProducerOrderList({ products }: ProducerOrderListProps) {
+  const [selectedProductId, setSelectedProductId] = useState<string>(
+    products[0]?.id || ""
+  );
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-8 text-earthBrown/50 font-roboto text-sm">
+        No products yet. Add products to see orders.
+      </div>
+    );
+  }
+
+  const selectedProduct = products.find((p) => p.id === selectedProductId);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <p className="text-sm text-muted-foreground">{filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}</p>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Filter by status" />
+      <div>
+        <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+          <SelectTrigger className="border-earthBrown/30">
+            <SelectValue placeholder="Select product" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Orders</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            {products.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.title}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-border rounded-xl">
-          <Package className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="font-serif text-lg text-foreground mb-1">No orders yet</p>
-          <p className="text-sm text-muted-foreground">Orders from consumers will appear here.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredOrders.map((order) => {
-            const product = productMap.get(order.productId);
-            const cfg = statusConfig[order.status] || statusConfig.pending;
-            return (
-              <div key={order.id} className="p-4 bg-card rounded-lg border border-border">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    {product?.thumbnail && (
-                      <img
-                        src={product.thumbnail.getDirectURL()}
-                        alt={product?.title}
-                        className="h-12 w-12 rounded-lg object-cover shrink-0"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/assets/generated/product-placeholder.dim_600x600.png'; }}
-                      />
-                    )}
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">{product?.title || 'Unknown Product'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Qty: {Number(order.quantity)} · {formatDate(order.timestamp)}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        Buyer: {order.buyer.toString().slice(0, 12)}...
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
-                      {cfg.icon} {cfg.label}
-                    </span>
-                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                      <Select
-                        value={order.status}
-                        onValueChange={(val) => handleStatusUpdate(order.id, val as OrderStatus)}
-                        disabled={updateStatus.isPending}
-                      >
-                        <SelectTrigger className="h-7 text-xs w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="delivered">Delivered</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {selectedProduct && <ProductOrders product={selectedProduct} />}
     </div>
   );
 }

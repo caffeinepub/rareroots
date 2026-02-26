@@ -1,154 +1,148 @@
-import React, { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import Layout from '../components/Layout';
-import BadgePill from '../components/BadgePill';
-import VoiceNotePlayer from '../components/VoiceNotePlayer';
-import { useGetAllProducers } from '../hooks/useQueries';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Users } from 'lucide-react';
-
-const FILTER_CHIPS = ['All', 'Banarasi', 'Kutch', 'Tribal', 'Himalayan', 'Northeast'];
+import { useState, useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import Layout from "../components/Layout";
+import RegionFilter from "../components/RegionFilter";
+import SearchBar from "../components/SearchBar";
+import VoiceNotePlayer from "../components/VoiceNotePlayer";
+import BadgePill from "../components/BadgePill";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetVerifiedProducers, useGetVerifiedProducts } from "../hooks/useQueries";
 
 export default function ProducerDiscovery() {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('All');
-  const { data: producers, isLoading } = useGetAllProducers();
+  const [selectedRegion, setSelectedRegion] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProducers = producers?.filter(p => {
-    if (activeFilter === 'All') return true;
-    return p.region?.toLowerCase().includes(activeFilter.toLowerCase());
-  }) ?? [];
+  const { data: producers = [], isLoading: producersLoading } = useGetVerifiedProducers();
+  const { data: products = [], isLoading: productsLoading } = useGetVerifiedProducts();
+
+  const isLoading = producersLoading || productsLoading;
+
+  const filteredProducers = useMemo(() => {
+    return producers.filter((producer) => {
+      const regionMatch =
+        selectedRegion === "All" || producer.region === selectedRegion;
+      const searchMatch =
+        !searchQuery ||
+        producer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        producer.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        producer.region.toLowerCase().includes(searchQuery.toLowerCase());
+      const hasProducts = products.some(
+        (p) => p.producerId.toString() === producer.id.toString() && Number(p.stock) > 0
+      );
+      return regionMatch && searchMatch && hasProducts;
+    });
+  }, [producers, products, selectedRegion, searchQuery]);
 
   return (
     <Layout>
-      <div className="px-4 py-4">
-        {/* Hero */}
-        <div className="relative rounded-card overflow-hidden mb-4" style={{ height: '120px' }}>
-          <img
-            src="/assets/generated/discover-hero.dim_1200x400.png"
-            alt="Discover Producers"
-            className="w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-          <div
-            className="absolute inset-0 flex flex-col justify-center px-5"
-            style={{ background: 'linear-gradient(90deg, rgba(75,0,130,0.8) 0%, rgba(75,0,130,0.3) 100%)' }}
-          >
-            <h1 className="font-poppins font-bold text-white" style={{ fontSize: '22px' }}>
-              🔍 Discover Producers
-            </h1>
-            <p className="font-playfair italic text-white text-sm opacity-90">
-              Rare artisans, direct connection
-            </p>
-          </div>
+      {/* Hero */}
+      <div className="relative w-full overflow-hidden" style={{ height: "160px" }}>
+        <img
+          src="/assets/generated/discover-hero.dim_1200x400.png"
+          alt="Discover"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-earthBrown/60" />
+        <div className="absolute inset-0 flex flex-col justify-center px-6">
+          <h1 className="font-playfair text-ivoryCream text-xl font-bold">
+            Discover Artisans
+          </h1>
+          <p className="font-roboto text-ivoryCream/80 text-sm mt-1">
+            {filteredProducers.length} verified producers
+          </p>
         </div>
+      </div>
 
-        {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4" style={{ scrollbarWidth: 'none' }}>
-          {FILTER_CHIPS.map(chip => (
-            <button
-              key={chip}
-              onClick={() => setActiveFilter(chip)}
-              className={`region-chip flex-shrink-0 ${activeFilter === chip ? 'active' : ''}`}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+      <div className="px-4 pt-4 pb-2">
+        <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search artisans..." />
+      </div>
 
-        {/* Producer Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <Skeleton key={i} className="h-52 rounded-card" />
-            ))}
-          </div>
-        ) : filteredProducers.length === 0 ? (
-          <div className="text-center py-16">
-            <Users className="w-12 h-12 mx-auto mb-3" style={{ color: '#DAA520' }} />
-            <p className="font-poppins font-semibold" style={{ color: '#8B4513' }}>
-              No producers found
-            </p>
-            <p className="font-roboto text-sm mt-1" style={{ color: '#666' }}>
-              Try a different filter
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {filteredProducers.map(producer => {
-              const photoUrl = producer.profilePhoto
+      <div className="px-4 py-2">
+        <RegionFilter selected={selectedRegion} onSelect={setSelectedRegion} />
+      </div>
+
+      <div className="px-4 py-2 space-y-3">
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 flex gap-3">
+                <Skeleton className="w-16 h-16 rounded-full shrink-0" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-32 mb-2" />
+                  <Skeleton className="h-3 w-full mb-1" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+            ))
+          : filteredProducers.map((producer) => {
+              const avatarUrl = producer.profilePhoto
                 ? producer.profilePhoto.getDirectURL()
-                : '/assets/generated/producer-avatar-placeholder.dim_200x200.png';
-              const logoUrl = producer.brandLogoBlob
-                ? producer.brandLogoBlob.getDirectURL()
-                : null;
+                : "/assets/generated/producer-avatar-placeholder.dim_200x200.png";
+
+              const producerProducts = products.filter(
+                (p) =>
+                  p.producerId.toString() === producer.id.toString() &&
+                  Number(p.stock) > 0
+              );
 
               return (
-                <div
+                <button
                   key={producer.id.toString()}
-                  className="product-card cursor-pointer hover:shadow-lg transition-shadow"
-                  style={{ minHeight: '200px' }}
-                  onClick={() => navigate({ to: `/producers/${producer.id.toString()}` })}
+                  onClick={() =>
+                    navigate({
+                      to: "/producers/$producerId",
+                      params: { producerId: producer.id.toString() },
+                    })
+                  }
+                  className="w-full text-left bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-earthBrown/10"
                 >
-                  {/* Top section with photo */}
-                  <div
-                    className="relative flex items-center justify-center"
-                    style={{
-                      height: '80px',
-                      background: producer.brandColor
-                        ? `linear-gradient(135deg, ${producer.brandColor}33, ${producer.brandColor}66)`
-                        : 'linear-gradient(135deg, rgba(139,69,19,0.1), rgba(218,165,32,0.2))',
-                    }}
-                  >
+                  <div className="flex gap-3">
                     <img
-                      src={logoUrl || photoUrl}
+                      src={avatarUrl}
                       alt={producer.name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white"
-                      style={{ boxShadow: '0px 2px 6px rgba(0,0,0,0.15)' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/assets/generated/producer-avatar-placeholder.dim_200x200.png';
-                      }}
+                      className="w-16 h-16 rounded-full object-cover shrink-0 border-2 border-earthBrown/20"
                     />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-poppins font-semibold text-earthBrown text-sm">
+                          {producer.name}
+                        </p>
+                        {producer.rarityBadge && (
+                          <BadgePill variant="gold" size="sm">
+                            {producer.rarityBadge}
+                          </BadgePill>
+                        )}
+                      </div>
+                      <p className="font-roboto text-xs text-earthBrown/60 mt-0.5">
+                        {producer.region} · {producerProducts.length} products
+                      </p>
+                      {producer.bio && (
+                        <p className="font-roboto text-xs text-earthBrown/70 mt-1 line-clamp-2">
+                          {producer.bio}
+                        </p>
+                      )}
+                      {producer.brandName && (
+                        <p className="font-poppins text-xs text-sandGold font-medium mt-1">
+                          {producer.brandName}
+                        </p>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Info */}
-                  <div className="p-3">
-                    <h3
-                      className="font-poppins font-bold text-center leading-tight mb-1"
-                      style={{ color: '#8B4513', fontSize: '16px' }}
-                    >
-                      {producer.brandName || producer.name}
-                    </h3>
-                    <p className="font-roboto text-xs text-center mb-2" style={{ color: '#666' }}>
-                      {producer.region}
-                    </p>
-
-                    {/* Voice Story button */}
-                    {producer.voiceStoryBlob ? (
-                      <div onClick={e => e.stopPropagation()}>
-                        <VoiceNotePlayer blob={producer.voiceStoryBlob} label="Voice Story" />
-                      </div>
-                    ) : (
-                      <div
-                        className="flex items-center justify-center gap-1 py-1"
-                        style={{ color: '#DAA520', fontSize: '12px' }}
-                      >
-                        <span>🎙️</span>
-                        <span className="font-roboto">Voice Story</span>
-                        <span>▶️</span>
-                      </div>
-                    )}
-
-                    {/* Badge */}
-                    {producer.brandTagline && (
-                      <div className="flex justify-center mt-2">
-                        <BadgePill text={`🏷️ ${producer.brandTagline.slice(0, 15)}`} />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  {producer.voiceStoryBlob && (
+                    <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                      <VoiceNotePlayer
+                        blob={producer.voiceStoryBlob}
+                        label="Voice Story"
+                      />
+                    </div>
+                  )}
+                </button>
               );
             })}
+
+        {!isLoading && filteredProducers.length === 0 && (
+          <div className="text-center py-12 text-earthBrown/50 font-roboto">
+            No artisans found for this filter.
           </div>
         )}
       </div>

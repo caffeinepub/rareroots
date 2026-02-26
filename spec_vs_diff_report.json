@@ -1,105 +1,38 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T16:32:33.029Z",
-  "summary": "The diff implements most of the 11 requirements (REQ-21 through REQ-31). The majority of design tokens, screen layouts, components, and interactions are present. However, a few specific acceptance criteria are not fully evidenced in the truncated diff, and one notable gap exists around the 'Following N Producers' stat in REQ-30 (it uses total producers count rather than actually followed producers). Several minor spec details appear partially or ambiguously implemented.",
+  "generatedAt": "2026-02-26T06:19:22.234Z",
+  "summary": "The diff implements most of the requested requirements. The backend/main.mo defines core data types and blob storage support. The frontend useQueries.ts is fully wired to the live actor. However, the state declarations visible in main.mo use 'let' rather than 'stable var', which may not survive canister upgrades. Additionally, backend/migration.mo is not present in the diff despite being required by the constraints for REQ-3.",
   "missing_requirements": [
     {
-      "id": "REQ-30",
-      "requirement": "Stats row shows 'N Rare Finds | Following N Producers' where N is the count of producers the user actually follows.",
-      "reason": "The OrderHistory.tsx uses producers?.length ?? 0 (total producers in the system) as the 'Following' count, not the actual count of producers the authenticated user follows. This misrepresents the spec which calls for 'Following N Producers' based on the user's follow relationships.",
+      "id": "REQ-1",
+      "requirement": "All core data types must be declared as stable variables in main.mo so state survives canister upgrades.",
+      "reason": "The visible portion of backend/main.mo shows state declared with 'let' (e.g., 'let userProfiles = Map.empty<Principal, UserProfile>()') rather than 'stable var'. Without stable variables, state will not survive canister upgrades. The file is truncated so stable declarations may exist later, but visible evidence contradicts this requirement.",
       "evidence": [
-        "frontend/src/pages/OrderHistory.tsx"
+        "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-26",
-      "requirement": "Product grid (40%) shows a 3x2 grid of product cards styled with the producer's brand color.",
-      "reason": "The ProducerProfile.tsx file is truncated and does not show sufficient evidence that a 3x2 product grid using the producer's brand color accent is fully implemented.",
-      "evidence": [
-        "frontend/src/pages/ProducerProfile.tsx"
-      ]
-    },
-    {
-      "id": "REQ-28",
-      "requirement": "On save, brand data is persisted to the backend.",
-      "reason": "The ProducerBrandSetup.tsx file is truncated and the handleSave function is cut off before showing the actual mutation call to the backend. Cannot confirm backend persistence is fully wired.",
-      "evidence": [
-        "frontend/src/pages/ProducerBrandSetup.tsx"
-      ]
-    },
-    {
-      "id": "REQ-31",
-      "requirement": "Voice Player bar must include a waveform visualization.",
-      "reason": "The VoiceNotePlayer component uses a simple CSS progress bar div rather than any waveform visualization. The spec explicitly requires waveform visualization.",
-      "evidence": [
-        "frontend/src/components/VoiceNotePlayer.tsx"
-      ]
+      "id": "REQ-3",
+      "requirement": "Migration logic for existing Order records (adding razorpayPaymentId) must be handled via backend/migration.mo.",
+      "reason": "The build request constraint explicitly requires migration logic in backend/migration.mo. The diff shows no added or modified backend/migration.mo file. The razorpayPaymentId field is added to the Order type in main.mo but the required migration.mo file is absent from the diff.",
+      "evidence": []
     }
   ],
   "hallucinated_features": [
     {
-      "description": "A separate /products route and ProductListing page beyond what was specified.",
-      "reason": "The build request specifies named screens without an explicit requirement for a separate /products listing page. A full ProductListing.tsx page and /products route were added without being requested in REQ-21 through REQ-31.",
+      "description": "A full UserApproval and MixinAuthorization system with separate modules (authorization/access-control, authorization/MixinAuthorization, user-approval/approval) was implemented in the backend.",
+      "reason": "The build request does not request a standalone approval mixin system or access control module architecture. While producer approve/reject endpoints were requested in REQ-2, the multi-module mixin-based authorization system was not specified.",
       "evidence": [
-        "frontend/src/pages/ProductListing.tsx",
-        "frontend/src/App.tsx"
-      ]
-    },
-    {
-      "description": "A /live and /live-sessions route with LiveSessions page.",
-      "reason": "None of the current requirements REQ-21 through REQ-31 specify building or updating a Live Sessions page.",
-      "evidence": [
-        "frontend/src/App.tsx"
-      ]
-    },
-    {
-      "description": "Order status filter chips on the My Collection page.",
-      "reason": "REQ-30 specifies order cards with a Delivered status display but does not specify interactive filter chips for filtering orders by status.",
-      "evidence": [
-        "frontend/src/pages/OrderHistory.tsx"
-      ]
-    },
-    {
-      "description": "BadgePill supports green, indigo, and red variant colors in addition to gold.",
-      "reason": "REQ-31 specifies the Badge Pill as Sand Gold #DAA520 fill only. Adding green, indigo, and red variants was not requested in the badge pill spec.",
-      "evidence": [
-        "frontend/src/components/BadgePill.tsx"
-      ]
-    },
-    {
-      "description": "A legacy /producer/dashboard route alias.",
-      "reason": "No requirement specifies maintaining a legacy /producer/dashboard path. This was added without being requested.",
-      "evidence": [
-        "frontend/src/App.tsx"
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/BadgePill.tsx",
-    "frontend/src/components/FeaturedProducers.tsx",
-    "frontend/src/components/Layout.tsx",
-    "frontend/src/components/ProductCard.tsx",
-    "frontend/src/components/PurchaseButton.tsx",
-    "frontend/src/components/PurchaseModal.tsx",
-    "frontend/src/components/RegionFilter.tsx",
-    "frontend/src/components/SearchBar.tsx",
-    "frontend/src/components/VoiceNotePlayer.tsx",
-    "frontend/src/index.css",
-    "frontend/src/pages/Home.tsx",
-    "frontend/src/pages/OrderConfirmation.tsx",
-    "frontend/src/pages/OrderHistory.tsx",
-    "frontend/src/pages/ProducerBrandSetup.tsx",
-    "frontend/src/pages/ProducerDashboard.tsx",
-    "frontend/src/pages/ProducerDiscovery.tsx",
-    "frontend/src/pages/ProducerProfile.tsx",
-    "frontend/src/pages/ProductDetail.tsx",
-    "frontend/src/pages/ProductListing.tsx",
-    "frontend/src/pages/Splash.tsx",
-    "frontend/tailwind.config.js",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

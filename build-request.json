@@ -1,304 +1,115 @@
 {
   "kind": "build_request",
-  "title": "Apply exact design system and screen-by-screen UI specification",
-  "projectName": "SamriddhiSrot",
-  "priority": "normal",
+  "title": "Add backend and database integration",
+  "projectName": "RareRoots",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-21",
-      "text": "Update the global CSS and Tailwind config to enforce the exact design token values: Earth Brown #8B4513 (primary buttons, headers), Sand Gold #DAA520 (accents, badges), Ivory Cream #FFFFF0 (background), Forest Green #228B22 (success/UPI actions), Kutch Indigo #4B0082 (producer brand accents). Load and apply Poppins Bold for headings (24pt/28pt/48pt as specified per screen), Roboto Regular for body text (16pt), and Playfair Display Italic for taglines (14pt–20pt). Enforce 16px spacing grid, 12px border radius on all buttons and cards, and box-shadow 0px 4px 8px rgba(0,0,0,0.1) across all interactive surfaces.",
-      "target": "frontend",
+      "id": "REQ-1",
+      "text": "Ensure the Motoko backend actor in backend/main.mo defines and persists all core data types — Producer, Product, Order, LiveStream, and User Profile — using stable variables so state survives canister upgrades.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-10"
         ],
         "quotes": [
-          "Earth Brown: #8B4513 (main buttons, headers)",
-          "Sand Gold: #DAA520 (accents, badges)",
-          "Ivory Cream: #FFFFF0 (background)",
-          "Forest Green: #228B22 (UPI success)",
-          "Kutch Indigo: #4B0082 (producer brands)",
-          "SPACING: 16px grid system",
-          "BORDER RADIUS: 12px all buttons/cards",
-          "SHADOW: 0px 4px 8px rgba(0,0,0,0.1)"
+          "add bacj=kend",
+          "where is the backend ans database intregation"
         ]
       },
       "acceptanceCriteria": [
-        "CSS custom properties and Tailwind config reflect all five exact hex color values",
-        "Poppins Bold, Roboto Regular, and Playfair Display Italic fonts are loaded and applied to the correct typographic roles",
-        "All buttons and cards have border-radius 12px",
-        "All card and button shadows match 0px 4px 8px rgba(0,0,0,0.1)",
-        "Page backgrounds render Ivory Cream #FFFFF0"
+        "All four core data types (Producer, Product, Order, LiveStream) are declared as stable variables in main.mo.",
+        "Data persists across canister upgrades without loss.",
+        "All CRUD endpoints for producers, products, orders, and live streams are implemented and callable."
       ]
     },
     {
-      "id": "REQ-22",
-      "text": "Implement a full-screen splash screen that appears for 2 seconds on app launch before auto-redirecting to the Home page. The splash must display: the logo text 'समृद्धिस्रोत' centered at the top 20% in Earth Brown #8B4513 Poppins Bold 48pt; the tagline 'Rare Producers, Direct Connection' centered at 50% in Sand Gold #DAA520 Playfair Display Italic 20pt; and at the bottom 20% an Earth Brown spinning loader with the text 'Connecting artisans...' in Roboto 14pt #8B4513. Background is an Ivory Cream-to-Sand-Gold vertical gradient.",
-      "target": "frontend",
+      "id": "REQ-2",
+      "text": "Implement all public backend endpoints required by the frontend query hooks in frontend/src/hooks/useQueries.ts, including: user profile create/get/update, producer register/get/list/approve/reject, product create/get/list/update/delete, order place/get/list/update-status, live stream create/get/list/update, and follower add/remove/list.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-10"
         ],
         "quotes": [
-          "SCREEN 1: SPLASH (2 seconds)",
-          "समृद्धिस्रोत #8B4513 | Poppins Bold 48pt",
-          "Rare Producers, Direct Connection #DAA520 | Playfair Italic 20pt",
-          "Earth Brown spinner (clockwise)",
-          "Connecting artisans... Roboto 14pt #8B4513",
-          "BACKGROUND: Ivory Cream gradient → Sand Gold bottom"
+          "where is the backend ans database intregation"
         ]
       },
       "acceptanceCriteria": [
-        "Splash screen displays for exactly 2 seconds then transitions to Home",
-        "Logo text 'समृद्धिस्रोत' appears at top center in #8B4513 Poppins Bold 48pt",
-        "Tagline displays in #DAA520 Playfair Display Italic 20pt at vertical center",
-        "Spinning loader and 'Connecting artisans...' text appear at the bottom",
-        "Background renders as an Ivory Cream to Sand Gold gradient"
+        "All functions referenced in useQueries.ts are implemented in the backend actor.",
+        "Each endpoint returns the correct data type as expected by the frontend.",
+        "Access control is enforced (e.g., only producers can manage their own products, only admin can approve/reject producers)."
       ]
     },
     {
-      "id": "REQ-23",
-      "text": "Redesign the Home Dashboard header to be a fixed top bar showing the 🏔️ SamriddhiSrot logo text in Earth Brown #8B4513 Poppins 24pt on the left, and a profile icon plus cart icon with item count on the right. The search bar below must be a rounded-rect white input with 48dp height and 8dp horizontal padding, placeholder text 'Search Himalayan herbs, Kutch crafts...' in #666 Roboto 16pt. Featured products must render as a horizontally scrollable row of cards (120×160dp image, rarity badge in Sand Gold, producer name in #8B4513 Poppins 16pt). Region filter chips must be horizontal, white background, Sand Gold border, showing: Himalayas | Northeast | Rajasthan | Kerala | Tribal.",
-      "target": "frontend",
+      "id": "REQ-3",
+      "text": "Integrate Razorpay payment data into the Order data type: ensure the `razorpayPaymentId` field is stored on order creation and is returned in order query responses, consistent with the migration in backend/migration.mo.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-10"
         ],
         "quotes": [
-          "SCREEN 2: HOME DASHBOARD",
-          "[Left] 🏔️ SamriddhiSrot #8B4513 Poppins 24pt",
-          "[Right] 👤 ProfileIcon | 🛒 Cart(0)",
-          "Search Himalayan herbs, Kutch crafts...",
-          "FEATURED CARDS (40% - Horizontal Scroll)",
-          "REGION FILTER: Himalayas | Northeast | Rajasthan | Kerala | Tribal"
+          "where is the backend ans database intregation"
         ]
       },
       "acceptanceCriteria": [
-        "Header is fixed/sticky showing brand name left and profile+cart icons right",
-        "Search bar has rounded corners, white background, correct placeholder text",
-        "Featured products scroll horizontally with image, badge, and producer name",
-        "Region filter chips display all five regions with Sand Gold border styling",
-        "Cart icon shows current item count"
+        "Order creation endpoint accepts and persists a razorpayPaymentId.",
+        "Order query endpoints return the razorpayPaymentId field.",
+        "Existing orders without a razorpayPaymentId default to null without errors."
       ]
     },
     {
-      "id": "REQ-24",
-      "text": "Implement a persistent bottom navigation bar across all app screens with four tabs: 🏠 Home (links to /), 🔍 Discover (links to /discover), 🛒 Orders (links to /orders), 👤 Profile (links to /collection for consumers, /dashboard for producers). Active tab color is Earth Brown #8B4513; inactive tab color is #666.",
+      "id": "REQ-4",
+      "text": "Wire all frontend query hooks in frontend/src/hooks/useQueries.ts to call the actual deployed backend canister actor via the useActor hook, replacing any mock or stub data with live canister calls.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-10"
         ],
         "quotes": [
-          "BOTTOM NAV (18% - Fixed): 🏠 Home | 🔍 Discover | 🛒 Orders | 👤 Profile",
-          "#8B4513 active | #666 inactive",
-          "Bottom nav persists (Home/Discover/Orders/Profile)"
+          "where is the backend ans database intregation"
         ]
       },
       "acceptanceCriteria": [
-        "Bottom nav is fixed and visible on all pages",
-        "Four tabs are present: Home, Discover, Orders, Profile",
-        "Active tab renders in #8B4513, inactive in #666",
-        "Home links to /, Discover to /discover, Orders to /orders, Profile to /collection or /dashboard based on role"
+        "useQueries.ts uses the actor from useActor to call backend functions.",
+        "No hardcoded mock data remains in query hooks.",
+        "React Query cache invalidation works correctly after mutations (e.g., placing an order, updating product stock)."
       ]
     },
     {
-      "id": "REQ-25",
-      "text": "Build or update the Producer Discovery page at route /discover as a 3×2 grid of producer cards. Each card (300×200dp, white background, 12px radius, standard shadow) must show: a circular 80dp producer photo overlay at the top 40%; the producer's brand name in #8B4513 Poppins Bold 20pt; a 🎙️ Voice Story play button in Sand Gold 14pt; and a rarity badge pill in Sand Gold at the bottom. Include filter chips at the top: Banarasi | Kutch | Tribal | Himalayan | Northeast.",
-      "target": "frontend",
+      "id": "REQ-5",
+      "text": "Implement blob storage support in the backend for producer profile photos, product thumbnails, voice notes, and brand logos — storing blobs as stable byte arrays keyed by a generated ID and exposing upload/retrieve endpoints.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-10"
         ],
         "quotes": [
-          "SCREEN 3: PRODUCER DISCOVERY",
-          "PRODUCER GRID (3x2 Cards)",
-          "CARD SPECS (300x200dp each #FFF shadow)",
-          "Producer Photo (circular 80dp overlay)",
-          "\"LaxmiLoom\" #8B4513 Poppins Bold 20pt",
-          "🎙️ Voice Story ▶️ #DAA520 14pt",
-          "🏷️ \"Kutch Secret\" badge #DAA520",
-          "FILTER CHIPS: Banarasi | Kutch | Tribal | Himalayan | Northeast"
+          "where is the backend ans database intregation"
         ]
       },
       "acceptanceCriteria": [
-        "/discover route renders a responsive grid of producer cards",
-        "Each card shows circular producer photo, brand name in #8B4513 Poppins Bold 20pt, voice story play button in Sand Gold, and a rarity badge",
-        "Filter chips for Banarasi, Kutch, Tribal, Himalayan, Northeast appear at the top",
-        "Card dimensions follow 300×200dp spec with 12px radius and shadow"
-      ]
-    },
-    {
-      "id": "REQ-26",
-      "text": "Update the Producer Profile public page (/producers/:id) layout to match the specification: fixed top section (25% height) with back arrow, Follow button in Sand Gold, producer name in #8B4513 Poppins 28pt, follower count in Roboto 14pt #666. Brand story section (20%) shows 100×100dp brand logo, brand story text in italic 16pt, and a voice player bar styled in Earth Brown #8B4513. Product grid (40%) shows a 3×2 grid of product cards styled with the producer's brand color. Action buttons at the bottom (15%): 💬 WhatsApp Chat button in Forest Green #228B22, and 📞 Live Call button in Sand Gold #DAA520. The WhatsApp Chat button must open a pre-filled WhatsApp link (wa.me) to the producer; the Live Call button remains a styled placeholder.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "SCREEN 4: PRODUCER PROFILE",
-          "[Follow Btn #DAA520]",
-          "👤 LaxmiLoom #8B4513 Poppins 28pt",
-          "1.2K Followers Roboto 14pt #666",
-          "🖼️ Brand Logo (workspace 100x100dp)",
-          "🎙️ [Voice Player Bar #8B4513]",
-          "💬 WhatsApp Chat #228B22 | 📞 Live Call #DAA520"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Producer name renders in #8B4513 Poppins 28pt",
-        "Follow button is styled in Sand Gold",
-        "Brand logo renders at 100×100dp",
-        "Voice player bar is styled in Earth Brown",
-        "WhatsApp Chat button is Forest Green and opens a wa.me link",
-        "Live Call button is Sand Gold and renders as a styled placeholder",
-        "Product grid uses the producer's brand color"
-      ]
-    },
-    {
-      "id": "REQ-27",
-      "text": "Update the Product Detail page layout to match the specification: full-width product image (300×300dp); product title in #8B4513 Poppins Bold 22pt; rarity badge pill in Sand Gold; a low-stock warning ('Only N Left') in #FF4500 with a blinking animation when stock is low; price in #228B22 Poppins 28pt; product story/description in Roboto Italic 16pt; a 🎙️ voice origin story audio player (height 48dp, background #8B4513); a full-width 'Buy Now' button (56dp height, #228B22, Poppins Bold 18pt, white text, 12px radius); and an outlined 'Custom Request' button in Sand Gold #DAA520.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "SCREEN 5: PRODUCT DETAIL",
-          "TITLE: \"Ghost Village Shawl by LaxmiLoom\" #8B4513 Poppins Bold 22pt",
-          "🏷️ \"Kutch Desert Secret\" #DAA520 pill",
-          "⏳ \"Only 3 Left\" #FF4500 blinking",
-          "PRICE: ₹2,800 #228B22 Poppins 28pt",
-          "🎙️ [30sec Audio Player #8B4513]",
-          "[FULL WIDTH #228B22 \"UPI Buy Now\" 56dp height]",
-          "[Outline #DAA520 \"Custom Request WhatsApp\"]"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Product title renders in #8B4513 Poppins Bold 22pt",
-        "Rarity badge pill renders in Sand Gold",
-        "Low-stock label renders in #FF4500 with a CSS blink/pulse animation",
-        "Price renders in #228B22 Poppins 28pt",
-        "Voice player bar is full-width with Earth Brown #8B4513 background",
-        "Buy Now button is full-width, 56dp height, Forest Green, Poppins Bold 18pt white text, 12px radius",
-        "Custom Request button renders as an outlined button in Sand Gold"
-      ]
-    },
-    {
-      "id": "REQ-28",
-      "text": "Build or update the Producer Brand Setup screen (accessible from the Producer Dashboard for authenticated producers) to match the specification: page header 'Complete Your Brand'; a form with: (1) Brand Name text input (placeholder: LaxmiLoom / MountainHealer), (2) Brand Tagline text input (max 20 characters), (3) brand logo photo upload button with camera icon, (4) brand color picker, (5) 30-second voice recorder with a record button labeled 'Tell Your Story'; and a full-width save button at the bottom in Forest Green #228B22 labeled 'Launch My Brand'.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "SCREEN 6: PRODUCER BRAND SETUP",
-          "BACK ARROW + \"Complete Your Brand\"",
-          "[TextInput] \"Your Brand Name\"",
-          "[TextInput] \"Brand Tagline (20 chars)\"",
-          "📸 [Camera Btn] \"Brand Logo Photo\"",
-          "🎨 [ColorPicker] Brand Color",
-          "🎙️ [Record Btn 30sec] \"Tell Your Story\"",
-          "SAVE BUTTON [Bottom Full #228B22 \"Launch My Brand\"]"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Brand Setup screen is accessible from the Producer Dashboard",
-        "Form includes Brand Name, Brand Tagline (max 20 chars), logo upload, color picker, and 30-sec voice recorder",
-        "Save button is full-width, Forest Green #228B22, labeled 'Launch My Brand'",
-        "On save, brand data is persisted to the backend"
-      ]
-    },
-    {
-      "id": "REQ-29",
-      "text": "Update the PurchaseModal and Checkout/Order confirmation UI to display: an order summary section showing product name, price, and a '92% goes direct to [BrandName] (8% platform fee)' message in Forest Green #228B22; a payment method selector UI showing PhonePe, GPay, Paytm, and Bank as options; and a full-width confirm/pay button in Forest Green labeled 'Pay ₹[amount]' (56dp height, Poppins Bold, 12px radius). After order confirmation, display a WhatsApp order tracking prompt linking to the producer's WhatsApp.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "SCREEN 7: CHECKOUT",
-          "\"92% → Laxmi direct (8% platform)\" #228B22",
-          "[Razorpay UPI Selector] PhonePe | GPay | Paytm | Bank",
-          "CONFIRM [Full #228B22 \"Pay ₹2,800\"]",
-          "WhatsApp order confirmation"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Order summary shows '92% goes direct to [BrandName]' in #228B22",
-        "Payment selector shows PhonePe, GPay, Paytm, Bank as visual options",
-        "Confirm button is full-width Forest Green with correct label",
-        "Post-confirmation screen shows a WhatsApp link for order tracking"
-      ]
-    },
-    {
-      "id": "REQ-30",
-      "text": "Update the My Collection / Order History page to match the specification: page header 'My Rare Collection'; scrollable order cards each showing a product thumbnail on the left, product name, producer name, star rating display (up to 5 stars), a 'Delivered ✓' status indicator, a Re-order button, and a 'Rate [ProducerName]' link. Show summary stats at the top: 'N Rare Finds | Following N Producers'.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "SCREEN 8: MY ORDERS",
-          "BACK ARROW \"My Rare Collection\"",
-          "[Image Left] Ghost Shawl - LaxmiLoom ⭐⭐⭐⭐",
-          "\"Delivered ✓ | Re-order | Rate Laxmi\"",
-          "STATS: \"3 Rare Finds | Following 5 Producers\""
-        ]
-      },
-      "acceptanceCriteria": [
-        "Page header reads 'My Rare Collection'",
-        "Each order card shows thumbnail, product name, producer name, star rating, delivery status, Re-order button, and Rate button",
-        "Stats row at top shows count of orders and count of followed producers",
-        "Page requires authentication to access"
-      ]
-    },
-    {
-      "id": "REQ-31",
-      "text": "Apply the Badge Pill and Voice Player component specs globally: Badge Pill — auto width, 32dp height, Sand Gold #DAA520 fill, Poppins 12pt text, 16px border radius. Voice Player bar — full width, 48dp height, Earth Brown #8B4513 background, waveform visualization, play/pause button, and a timestamp display (e.g. 00:12 / 00:30). Product Card — white background, 12px radius, shadow 0 4px 8px rgba(0,0,0,0.1). UPI/action buttons — full width, 56dp height, Forest Green #228B22, Poppins Bold 18pt, white text, 12px radius.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "BADGE PILL: Width: Auto | Height: 32dp | #DAA520 fill | Text: Poppins 12pt | Radius: 16px",
-          "VOICE PLAYER: Width: Full | Height: 48dp | #8B4513 | [Waveform] ▶️ 00:12 / 00:30",
-          "PRODUCT CARD: 300x200dp | #FFF | Shadow 0 4px 8px rgba(0,0,0,0.1) | Radius: 12px",
-          "UPI BUTTON: Full Width | 56dp height | #228B22 | Poppins Bold 18pt | White text | Radius: 12px"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All rarity/region badge pills use 32dp height, #DAA520 fill, Poppins 12pt, 16px radius",
-        "All voice player instances are full-width, 48dp tall, Earth Brown background with timestamp",
-        "All product cards use white background, 12px radius, and specified shadow",
-        "All primary action/UPI buttons are full-width, 56dp, Forest Green, Poppins Bold 18pt white"
+        "Blob upload endpoint accepts Blob (byte array) and returns a unique blob ID.",
+        "Blob retrieval endpoint returns the stored bytes for a given ID.",
+        "Frontend upload flows (profile photo, product thumbnail, voice note) use these endpoints successfully."
       ]
     }
   ],
   "constraints": [
-    "Do not integrate Razorpay SDK or any third-party payment SDK — render payment method selection as a styled UI component only",
-    "Do not add WhatsApp API integration — WhatsApp buttons must use wa.me deep links only",
-    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
-    "All Motoko logic must remain in backend/main.mo as a single actor"
+    "All backend logic must remain in a single Motoko actor in backend/main.mo.",
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "Use stable variables for all persistent state to survive upgrades.",
+    "Migration logic for existing Order records (adding razorpayPaymentId) must be handled via backend/migration.mo."
   ],
   "nonGoals": [
-    "Real-time WebSocket or push notification features",
-    "Phone number OTP authentication (Internet Identity only)",
-    "Actual Razorpay/payment gateway SDK integration",
-    "Native mobile app build (MIT App Inventor target)",
-    "Backend schema changes unless required by new UI fields"
+    "Changing the visual design or UI layout of any existing page.",
+    "Integrating any external database (PostgreSQL, MySQL, etc.).",
+    "Adding new product or user-facing features beyond what is already designed.",
+    "Modifying the Razorpay frontend checkout flow in useRazorpay.ts."
   ],
   "imageRequirements": {
-    "required": [
-      "Full-screen splash background with a vertical gradient from Ivory Cream #FFFFF0 at the top to Sand Gold #DAA520 at the bottom, subtle texture evoking handmade paper (splash-bg.dim_1080x1920.png)",
-      "Hero banner image showing an artisan market scene with warm earthy tones, Himalayan/Indian craft products displayed on a wooden stall, terracotta and gold color palette (hero-banner.dim_1440x600.png)",
-      "Artisan marketplace illustration card background with subtle woven texture pattern in cream and sand tones (card-texture-bg.dim_600x400.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

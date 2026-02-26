@@ -1,43 +1,35 @@
-import React from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Loader2 } from "lucide-react";
 
 interface PurchaseButtonProps {
   onClick: () => void;
-  disabled?: boolean;
   isLoading?: boolean;
+  disabled?: boolean;
   price?: number;
   label?: string;
 }
 
 export default function PurchaseButton({
   onClick,
-  disabled = false,
   isLoading = false,
+  disabled = false,
   price,
-  label = 'Buy Now',
+  label = "Buy Now",
 }: PurchaseButtonProps) {
   return (
     <button
       onClick={onClick}
       disabled={disabled || isLoading}
-      className="btn-primary gap-2"
-      style={{
-        backgroundColor: disabled ? '#ccc' : '#228B22',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-      }}
+      className="flex items-center justify-center gap-2 w-full bg-earthBrown text-ivoryCream font-poppins font-semibold py-3 px-6 rounded-full hover:bg-earthBrown/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isLoading ? (
-        <div
-          className="w-5 h-5 rounded-full border-2 border-white border-t-transparent spinner-cw"
-        />
+        <Loader2 size={18} className="animate-spin" />
       ) : (
-        <>
-          <ShoppingBag className="w-5 h-5" />
-          <span>
-            {price ? `UPI Buy Now — ₹${Number(price).toLocaleString('en-IN')}` : label}
-          </span>
-        </>
+        <ShoppingBag size={18} />
       )}
+      <span>
+        {label}
+        {price !== undefined && ` · ₹${price.toLocaleString("en-IN")}`}
+      </span>
     </button>
   );
 }

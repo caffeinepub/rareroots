@@ -1,62 +1,42 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function Splash() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      sessionStorage.setItem('splashShown', 'true');
-      navigate({ to: '/' });
+      navigate({ to: "/home" });
     }, 2000);
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-between overflow-hidden"
+      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, #FFFFF0 0%, #FFFFF0 50%, #DAA520 100%)',
+        backgroundImage: "url('/assets/generated/splash-bg.dim_1080x1920.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      {/* Top 20% - Logo */}
-      <div className="flex flex-col items-center justify-center" style={{ flex: '0 0 20%', paddingTop: '40px' }}>
-        <div
-          className="font-poppins font-bold text-center leading-tight"
-          style={{ fontSize: '48px', color: '#8B4513' }}
-        >
-          समृद्धिस्रोत
-        </div>
-      </div>
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-earthBrown/70" />
 
-      {/* Center 50% - Tagline */}
-      <div className="flex flex-col items-center justify-center" style={{ flex: '0 0 50%' }}>
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-6 px-8 text-center">
         <img
-          src="/assets/generated/logo-mark.dim_256x256.png"
+          src="/assets/generated/logo-wordmark.dim_400x120.png"
           alt="SamriddhiSrot"
-          className="w-24 h-24 object-contain mb-6 opacity-80"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          className="w-64 md:w-80 object-contain drop-shadow-lg"
         />
-        <p
-          className="font-playfair italic text-center px-8"
-          style={{ fontSize: '20px', color: '#DAA520' }}
-        >
-          "Rare Producers, Direct Connection"
-        </p>
-      </div>
 
-      {/* Bottom 20% - Loader */}
-      <div className="flex flex-col items-center justify-center gap-3 pb-12" style={{ flex: '0 0 20%' }}>
-        <div
-          className="w-10 h-10 rounded-full border-4 border-t-transparent spinner-cw"
-          style={{ borderColor: '#8B4513', borderTopColor: 'transparent' }}
-        />
-        <p
-          className="font-roboto text-center"
-          style={{ fontSize: '14px', color: '#8B4513' }}
-        >
-          Connecting artisans...
+        <p className="font-playfair italic text-sandGold text-xl md:text-2xl leading-relaxed">
+          Own the Story Behind What You Wear
         </p>
+
+        {/* Spinner */}
+        <div className="mt-4 w-10 h-10 border-4 border-sandGold/30 border-t-earthBrown rounded-full animate-spin" />
       </div>
     </div>
   );

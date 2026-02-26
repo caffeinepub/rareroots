@@ -10,6 +10,9 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type ApprovalStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export type ExternalBlob = Uint8Array;
 export interface LiveStream {
   'id' : string,
@@ -25,6 +28,7 @@ export type LiveStreamStatus = { 'scheduled' : null } |
   { 'ended' : null };
 export interface Order {
   'id' : string,
+  'razorpayPaymentId' : [] | [string],
   'status' : OrderStatus,
   'productId' : string,
   'timestamp' : Time,
@@ -40,9 +44,12 @@ export interface Producer {
   'id' : Principal,
   'bio' : string,
   'region' : string,
+  'verified' : boolean,
   'brandLogoBlob' : [] | [ExternalBlob],
+  'rarityBadge' : string,
   'name' : string,
   'profilePhoto' : [] | [ExternalBlob],
+  'whatsApp' : string,
   'voiceStoryBlob' : [] | [ExternalBlob],
   'brandTagline' : string,
   'followerCount' : bigint,
@@ -56,6 +63,7 @@ export interface Product {
   'title' : string,
   'rarityBadge' : string,
   'thumbnail' : [] | [ExternalBlob],
+  'liveVideoURL' : [] | [string],
   'producerId' : Principal,
   'description' : string,
   'stock' : bigint,
@@ -63,6 +71,10 @@ export interface Product {
   'price' : bigint,
 }
 export type Time = bigint;
+export interface UserApprovalInfo {
+  'status' : ApprovalStatus,
+  'principal' : Principal,
+}
 export interface UserProfile { 'name' : string, 'role' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -95,6 +107,8 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'adminApproveProducer' : ActorMethod<[Principal], boolean>,
+  'adminRejectProducer' : ActorMethod<[Principal], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'cancelOrder' : ActorMethod<[string], undefined>,
   'createLiveStream' : ActorMethod<[string, string, Time], string>,
@@ -109,6 +123,8 @@ export interface _SERVICE {
       [] | [ExternalBlob],
       string,
       [] | [ExternalBlob],
+      string,
+      string,
     ],
     undefined
   >,
@@ -124,10 +140,11 @@ export interface _SERVICE {
       [] | [ExternalBlob],
       string,
       [] | [bigint],
+      [] | [string],
     ],
     undefined
   >,
-  'createOrder' : ActorMethod<[string, bigint], string>,
+  'createOrder' : ActorMethod<[string, bigint, [] | [string]], string>,
   'deleteProducer' : ActorMethod<[Principal], undefined>,
   'deleteProduct' : ActorMethod<[string], undefined>,
   'followProducer' : ActorMethod<[Principal], undefined>,
@@ -147,15 +164,33 @@ export interface _SERVICE {
   'getOrdersByProduct' : ActorMethod<[string], Array<Order>>,
   'getOrdersByStatus' : ActorMethod<[OrderStatus], Array<Order>>,
   'getProducer' : ActorMethod<[Principal], Producer>,
+  'getProducersByRegion' : ActorMethod<[string], Array<Producer>>,
   'getProduct' : ActorMethod<[string], Product>,
+  'getProductsByBrandName' : ActorMethod<[string], Array<Product>>,
   'getProductsByPriceRange' : ActorMethod<[bigint, bigint], Array<Product>>,
   'getProductsByProducer' : ActorMethod<[Principal], Array<Product>>,
+  'getProductsByRarityBadge' : ActorMethod<[string], Array<Product>>,
   'getProductsByRegion' : ActorMethod<[string], Array<Product>>,
+  'getProductsByVerifiedProducer' : ActorMethod<[Principal], Array<Product>>,
   'getProductsInStock' : ActorMethod<[], Array<Product>>,
+  'getProductsWithLiveVideo' : ActorMethod<[], Array<Product>>,
+  'getRegionalProductsByProducer' : ActorMethod<
+    [Principal, string],
+    Array<Product>
+  >,
+  'getUniqueRegions' : ActorMethod<[], Array<string>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getVerifiedProducerProducts' : ActorMethod<[Principal], Array<Product>>,
+  'getVerifiedProducers' : ActorMethod<[], Array<Producer>>,
+  'getVerifiedProducts' : ActorMethod<[], Array<Product>>,
+  'getVerifiedProductsByRegion' : ActorMethod<[string], Array<Product>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerApproved' : ActorMethod<[], boolean>,
   'isFollowing' : ActorMethod<[Principal, Principal], boolean>,
+  'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
+  'requestApproval' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'unfollowProducer' : ActorMethod<[Principal], undefined>,
   'updateLiveStreamStatus' : ActorMethod<[string, LiveStreamStatus], undefined>,
   'updateLiveStreamStory' : ActorMethod<[string, string], undefined>,

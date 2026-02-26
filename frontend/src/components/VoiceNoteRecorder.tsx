@@ -1,189 +1,198 @@
-import React, { useRef, useState } from 'react';
-import { Mic, MicOff, Square, Upload, Play, Pause, Trash2, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { ExternalBlob } from '../backend';
-import { useMediaRecorder } from '../hooks/useMediaRecorder';
+import { useState, useRef } from "react";
+import { Mic, Square, Play, Pause, Trash2, Upload, Check } from "lucide-react";
+import { ExternalBlob } from "../backend";
+import { toast } from "sonner";
 
 interface VoiceNoteRecorderProps {
-  onVoiceNoteReady: (blob: ExternalBlob | null) => void;
-  existingVoiceNote?: ExternalBlob | null;
+  onSave: (blob: ExternalBlob) => void;
+  maxSeconds?: number;
+  label?: string;
 }
 
-export default function VoiceNoteRecorder({ onVoiceNoteReady, existingVoiceNote }: VoiceNoteRecorderProps) {
-  const { recordingState, audioBlob, audioUrl, duration, error, startRecording, stopRecording, clearRecording } = useMediaRecorder();
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+export default function VoiceNoteRecorder({
+  onSave,
+  maxSeconds = 30,
+  label = "Record Voice Note",
+}: VoiceNoteRecorderProps) {
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [saved, setSaved] = useState(false);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewAudioRef = useRef<HTMLAudioElement>(null);
 
-  const formatDuration = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, '0')}`;
-  };
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-    const blob = ExternalBlob.fromBytes(uint8).withUploadProgress((pct) => setUploadProgress(pct));
-    setIsUploading(true);
-    setUploadProgress(0);
-    onVoiceNoteReady(blob);
-    setIsSaved(true);
-    setIsUploading(false);
-  };
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
 
-  const handleSaveRecording = async () => {
-    if (!audioBlob) return;
-    setIsUploading(true);
-    setUploadProgress(0);
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-    const externalBlob = ExternalBlob.fromBytes(uint8).withUploadProgress((pct) => setUploadProgress(pct));
-    onVoiceNoteReady(externalBlob);
-    setIsSaved(true);
-    setIsUploading(false);
-  };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        setAudioBlob(blob);
+        setAudioUrl(url);
+        stream.getTracks().forEach((t) => t.stop());
+      };
 
-  const handleClear = () => {
-    clearRecording();
-    setIsSaved(false);
-    setUploadProgress(0);
-    onVoiceNoteReady(null);
-  };
+      mr.start();
+      setIsRecording(true);
+      setDuration(0);
+      setSaved(false);
 
-  const togglePreview = () => {
-    const audio = previewAudioRef.current;
-    if (!audio) return;
-    if (isPreviewPlaying) {
-      audio.pause();
-      setIsPreviewPlaying(false);
-    } else {
-      audio.play().then(() => setIsPreviewPlaying(true)).catch(() => {});
+      timerRef.current = setInterval(() => {
+        setDuration((d) => {
+          if (d + 1 >= maxSeconds) {
+            stopRecording();
+            return maxSeconds;
+          }
+          return d + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error("Microphone access denied");
     }
   };
 
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleClear = () => {
+    setAudioUrl(null);
+    setAudioBlob(null);
+    setIsPlaying(false);
+    setDuration(0);
+    setSaved(false);
+  };
+
+  const handleSave = async () => {
+    if (!audioBlob) return;
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    const externalBlob = ExternalBlob.fromBytes(uint8);
+    onSave(externalBlob);
+    setSaved(true);
+    toast.success("Voice note saved");
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setAudioUrl(url);
+    setAudioBlob(file);
+    setSaved(false);
+  };
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Record Button */}
-        {recordingState === 'idle' && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={startRecording}
-            className="border-terracotta text-terracotta hover:bg-terracotta hover:text-primary-foreground"
-          >
-            <Mic className="h-4 w-4 mr-1.5" />
-            Record Voice Note
-          </Button>
-        )}
+    <div className="border border-earthBrown/20 rounded-xl p-3 bg-white">
+      <p className="font-poppins text-xs font-medium text-earthBrown mb-2">{label}</p>
 
-        {recordingState === 'recording' && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={stopRecording}
-            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground animate-pulse"
-          >
-            <Square className="h-4 w-4 mr-1.5 fill-current" />
-            Stop ({formatDuration(duration)})
-          </Button>
-        )}
+      {audioUrl && (
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          onEnded={() => setIsPlaying(false)}
+          className="hidden"
+        />
+      )}
 
-        {/* Upload Button */}
-        {recordingState === 'idle' && (
+      <div className="flex items-center gap-2">
+        {!audioUrl ? (
           <>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="border-forest text-forest hover:bg-forest hover:text-secondary-foreground"
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-poppins font-medium transition-colors ${
+                isRecording
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-earthBrown text-ivoryCream hover:bg-earthBrown/90"
+              }`}
             >
-              <Upload className="h-4 w-4 mr-1.5" />
-              Upload Audio
-            </Button>
+              {isRecording ? (
+                <>
+                  <Square size={12} /> Stop ({maxSeconds - duration}s)
+                </>
+              ) : (
+                <>
+                  <Mic size={12} /> Record
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-poppins font-medium border border-earthBrown/30 text-earthBrown hover:bg-earthBrown/5"
+            >
+              <Upload size={12} /> Upload
+            </button>
             <input
               ref={fileInputRef}
               type="file"
               accept="audio/*"
-              className="hidden"
               onChange={handleFileUpload}
+              className="hidden"
             />
           </>
-        )}
-
-        {/* Preview & Save */}
-        {recordingState === 'stopped' && audioUrl && (
+        ) : (
           <>
-            <audio
-              ref={previewAudioRef}
-              src={audioUrl}
-              onEnded={() => setIsPreviewPlaying(false)}
-            />
-            <Button type="button" variant="outline" size="sm" onClick={togglePreview}>
-              {isPreviewPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-              {isPreviewPlaying ? 'Pause' : 'Preview'}
-            </Button>
-            {!isSaved && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleSaveRecording}
-                disabled={isUploading}
-                className="bg-terracotta hover:bg-terracotta-dark text-primary-foreground border-0"
-              >
-                <Check className="h-4 w-4 mr-1.5" />
-                Use Recording
-              </Button>
-            )}
-            <Button type="button" variant="ghost" size="sm" onClick={handleClear}>
-              <Trash2 className="h-4 w-4 mr-1.5" />
-              Clear
-            </Button>
+            <button
+              onClick={togglePlay}
+              className="w-7 h-7 rounded-full bg-earthBrown text-ivoryCream flex items-center justify-center hover:bg-earthBrown/90"
+            >
+              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+            </button>
+            <span className="font-roboto text-xs text-earthBrown/60 flex-1">
+              {duration}s recorded
+            </span>
+            <button
+              onClick={handleSave}
+              disabled={saved}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-poppins font-medium transition-colors ${
+                saved
+                  ? "bg-forestGreen/10 text-forestGreen"
+                  : "bg-forestGreen text-white hover:bg-forestGreen/90"
+              }`}
+            >
+              <Check size={12} /> {saved ? "Saved" : "Save"}
+            </button>
+            <button
+              onClick={handleClear}
+              className="w-7 h-7 rounded-full border border-red-200 text-red-400 flex items-center justify-center hover:bg-red-50"
+            >
+              <Trash2 size={12} />
+            </button>
           </>
         )}
       </div>
-
-      {/* Status */}
-      {recordingState === 'recording' && (
-        <div className="flex items-center gap-2 text-sm text-destructive">
-          <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-          Recording... {formatDuration(duration)}
-        </div>
-      )}
-
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
-
-      {isUploading && (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Preparing audio...</p>
-          <Progress value={uploadProgress} className="h-1.5" />
-        </div>
-      )}
-
-      {isSaved && (
-        <p className="text-sm text-forest flex items-center gap-1">
-          <Check className="h-3.5 w-3.5" />
-          Voice note ready to save
-        </p>
-      )}
-
-      {existingVoiceNote && !isSaved && recordingState === 'idle' && (
-        <p className="text-xs text-muted-foreground">
-          ✓ Existing voice note attached. Record or upload to replace it.
-        </p>
-      )}
     </div>
   );
 }

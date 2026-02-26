@@ -1,55 +1,48 @@
-import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { Radio, ArrowRight } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { LiveStream, Producer } from '../backend';
-import LiveSessionCard from './LiveSessionCard';
+import { useNavigate } from "@tanstack/react-router";
+import { useGetAllLiveStreams } from "../hooks/useQueries";
+import { LiveStreamStatus } from "../backend";
+import LiveSessionCard from "./LiveSessionCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface LiveNowSectionProps {
-  streams: LiveStream[];
-  producers: Producer[];
-  isLoading: boolean;
-}
+export default function LiveNowSection() {
+  const navigate = useNavigate();
+  const { data: streams = [], isLoading } = useGetAllLiveStreams();
 
-export default function LiveNowSection({ streams, producers, isLoading }: LiveNowSectionProps) {
-  const producerMap = new Map(producers.map((p) => [p.id.toString(), p]));
+  const activeStreams = streams
+    .filter((s) => s.status === LiveStreamStatus.active)
+    .slice(0, 3);
 
-  if (!isLoading && streams.length === 0) return null;
+  if (!isLoading && activeStreams.length === 0) return null;
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Radio className="h-4 w-4 text-terracotta animate-live-pulse" />
-              <p className="text-sm text-terracotta font-medium uppercase tracking-widest">Happening Now</p>
-            </div>
-            <h2 className="font-serif text-3xl font-bold text-foreground">Live Sessions</h2>
-          </div>
-          <Link to="/live-sessions" className="text-sm text-forest hover:text-terracotta transition-colors flex items-center gap-1">
-            View all <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+    <section className="px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-poppins font-semibold text-earthBrown text-base flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          Live Now
+        </h2>
+        <button
+          onClick={() => navigate({ to: "/live-sessions" })}
+          className="text-xs text-sandGold font-poppins hover:underline"
+        >
+          View all
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-card rounded-xl border border-border p-5">
-                  <Skeleton className="h-11 w-11 rounded-full mb-3" />
-                  <Skeleton className="h-4 w-40 mb-2" />
-                  <Skeleton className="h-3 w-full mb-1" />
-                  <Skeleton className="h-3 w-3/4" />
+      <div className="flex flex-col gap-3">
+        {isLoading
+          ? Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="flex gap-3 p-3 bg-white rounded-xl">
+                <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                <div className="flex-1">
+                  <Skeleton className="h-3 w-32 mb-2" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-              ))
-            : streams.slice(0, 3).map((stream) => (
-                <LiveSessionCard
-                  key={stream.id}
-                  stream={stream}
-                  producer={producerMap.get(stream.producerId.toString())}
-                />
-              ))}
-        </div>
+              </div>
+            ))
+          : activeStreams.map((stream) => (
+              <LiveSessionCard key={stream.id} stream={stream} />
+            ))}
       </div>
     </section>
   );

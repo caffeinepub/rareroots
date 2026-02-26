@@ -1,105 +1,89 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { Home, Search, ShoppingBag, User, Mountain, ShoppingCart } from 'lucide-react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
+import { ReactNode } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Home, Compass, ShoppingBag, User } from "lucide-react";
 
 interface LayoutProps {
-  children: React.ReactNode;
-  cartCount?: number;
+  children: ReactNode;
 }
 
-export default function Layout({ children, cartCount = 0 }: LayoutProps) {
-  const location = useLocation();
+const navItems = [
+  { label: "Home", icon: Home, path: "/home" },
+  { label: "Discover", icon: Compass, path: "/discover" },
+  { label: "Orders", icon: ShoppingBag, path: "/orders" },
+  { label: "Profile", icon: User, path: "/dashboard" },
+] as const;
+
+export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
-  const { identity } = useInternetIdentity();
-  const { data: userProfile } = useGetCallerUserProfile();
-
-  const isProducer = userProfile?.role === 'producer';
-  const profilePath = isProducer ? '/dashboard' : '/collection';
-
-  const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/discover', label: 'Discover', icon: Search },
-    { path: '/orders', label: 'Orders', icon: ShoppingBag },
-    { path: profilePath, label: 'Profile', icon: User },
-  ] as const;
-
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
-  };
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FFFFF0' }}>
+    <div className="min-h-screen bg-ivoryCream flex flex-col">
       {/* Fixed Header */}
-      <header
-        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4"
-        style={{
-          height: '60px',
-          backgroundColor: '#FFFFF0',
-          boxShadow: '0px 2px 8px rgba(0,0,0,0.08)',
-          borderBottom: '1px solid rgba(218,165,32,0.2)',
-        }}
-      >
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 no-underline">
-          <Mountain className="w-6 h-6" style={{ color: '#8B4513' }} />
-          <span
-            className="font-poppins font-bold"
-            style={{ fontSize: '22px', color: '#8B4513' }}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-earthBrown shadow-md">
+        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => navigate({ to: "/home" })}
+            className="flex items-center gap-2"
           >
-            SamriddhiSrot
-          </span>
-        </Link>
+            <img
+              src="/assets/generated/logo-mark.dim_256x256.png"
+              alt="SamriddhiSrot"
+              className="w-8 h-8 object-contain rounded-full"
+            />
+            <span className="font-poppins font-bold text-sandGold text-lg tracking-wide">
+              समृद्धिस्रोत
+            </span>
+          </button>
 
-        {/* Right Icons */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate({ to: profilePath })}
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-amber-50 transition-colors"
-          >
-            <User className="w-5 h-5" style={{ color: '#8B4513' }} />
-          </button>
-          <button
-            onClick={() => navigate({ to: '/orders' })}
-            className="relative w-9 h-9 rounded-full flex items-center justify-center hover:bg-amber-50 transition-colors"
-          >
-            <ShoppingCart className="w-5 h-5" style={{ color: '#8B4513' }} />
-            {cartCount > 0 && (
-              <span
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white font-poppins font-bold"
-                style={{ fontSize: '10px', backgroundColor: '#DAA520' }}
-              >
-                {cartCount}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate({ to: "/orders" })}
+              className="text-ivoryCream hover:text-sandGold transition-colors"
+              aria-label="Orders"
+            >
+              <ShoppingBag size={22} />
+            </button>
+            <button
+              onClick={() => navigate({ to: "/dashboard" })}
+              className="text-ivoryCream hover:text-sandGold transition-colors"
+              aria-label="Profile"
+            >
+              <User size={22} />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ paddingTop: '60px', paddingBottom: '72px' }}>
+      <main className="flex-1 pt-14 pb-20 max-w-lg mx-auto w-full">
         {children}
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="bottom-nav">
-        {navItems.map(({ path, label, icon: Icon }) => (
-          <Link
-            key={path}
-            to={path}
-            className={`bottom-nav-item ${isActive(path) ? 'active' : ''}`}
-          >
-            <Icon
-              className="w-5 h-5"
-              style={{ color: isActive(path) ? '#8B4513' : '#666' }}
-            />
-            <span style={{ color: isActive(path) ? '#8B4513' : '#666', fontSize: '11px' }}>
-              {label}
-            </span>
-          </Link>
-        ))}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+        <div className="max-w-lg mx-auto flex">
+          {navItems.map(({ label, icon: Icon, path }) => {
+            const isActive = currentPath === path || (path === "/home" && currentPath === "/");
+            return (
+              <button
+                key={path}
+                onClick={() => navigate({ to: path })}
+                className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${
+                  isActive
+                    ? "text-earthBrown"
+                    : "text-gray-400 hover:text-earthBrown"
+                }`}
+              >
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
+                <span className={`text-xs font-poppins ${isActive ? "font-semibold" : "font-normal"}`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );

@@ -1,31 +1,33 @@
-import React from 'react';
+import { ReactNode } from "react";
 
 interface BadgePillProps {
-  text: string;
-  className?: string;
-  variant?: 'gold' | 'green' | 'indigo' | 'red';
+  children: ReactNode;
+  variant?: "gold" | "green" | "indigo" | "red";
+  size?: "sm" | "md";
 }
 
-export default function BadgePill({ text, className = '', variant = 'gold' }: BadgePillProps) {
-  const variantStyles: Record<string, React.CSSProperties> = {
-    gold: { backgroundColor: '#DAA520', color: 'white' },
-    green: { backgroundColor: '#228B22', color: 'white' },
-    indigo: { backgroundColor: '#4B0082', color: 'white' },
-    red: { backgroundColor: '#FF4500', color: 'white' },
-  };
+const variantClasses = {
+  gold: "bg-sandGold/20 text-sandGold border border-sandGold/40",
+  green: "bg-forestGreen/10 text-forestGreen border border-forestGreen/30",
+  indigo: "bg-kutchIndigo/10 text-kutchIndigo border border-kutchIndigo/30",
+  red: "bg-red-50 text-red-600 border border-red-200",
+};
 
+const sizeClasses = {
+  sm: "text-[10px] px-1.5 py-0.5",
+  md: "text-xs px-2.5 py-1",
+};
+
+export default function BadgePill({
+  children,
+  variant = "gold",
+  size = "md",
+}: BadgePillProps) {
   return (
     <span
-      className={`inline-flex items-center font-poppins font-semibold whitespace-nowrap ${className}`}
-      style={{
-        height: '32px',
-        padding: '0 12px',
-        borderRadius: '16px',
-        fontSize: '12px',
-        ...variantStyles[variant],
-      }}
+      className={`inline-flex items-center rounded-full font-poppins font-semibold ${variantClasses[variant]} ${sizeClasses[size]}`}
     >
-      {text}
+      {children}
     </span>
   );
 }

@@ -1,179 +1,151 @@
-import React from 'react';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  createRouter,
-  createRoute,
   createRootRoute,
+  createRoute,
+  createRouter,
   RouterProvider,
   Outlet,
-  redirect,
-} from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from 'next-themes';
-
-import Splash from './pages/Splash';
-import Home from './pages/Home';
-import ProductDetail from './pages/ProductDetail';
-import ProducerDiscovery from './pages/ProducerDiscovery';
-import ProducerProfile from './pages/ProducerProfile';
-import ProducerDashboard from './pages/ProducerDashboard';
-import ProducerBrandSetup from './pages/ProducerBrandSetup';
-import OrderHistory from './pages/OrderHistory';
-import OrderConfirmation from './pages/OrderConfirmation';
-import LiveSessions from './pages/LiveSessions';
-import ProductListing from './pages/ProductListing';
-import ProfileSetupModal from './components/ProfileSetupModal';
+} from "@tanstack/react-router";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
+import Splash from "./pages/Splash";
+import Home from "./pages/Home";
+import ProducerDiscovery from "./pages/ProducerDiscovery";
+import ProducerProfile from "./pages/ProducerProfile";
+import ProductDetail from "./pages/ProductDetail";
+import ProductListing from "./pages/ProductListing";
+import ProducerDashboard from "./pages/ProducerDashboard";
+import ProducerBrandSetup from "./pages/ProducerBrandSetup";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import OrderHistory from "./pages/OrderHistory";
+import Admin from "./pages/Admin";
+import LiveSessions from "./pages/LiveSessions";
+import ProfileSetupModal from "./components/ProfileSetupModal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2,
       retry: 1,
+      staleTime: 30000,
     },
   },
 });
 
-// Root layout
+function RootLayout() {
+  return (
+    <>
+      <ProfileSetupModal />
+      <Outlet />
+      <Toaster />
+    </>
+  );
+}
+
 const rootRoute = createRootRoute({
-  component: () => (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <Outlet />
-        <ProfileSetupModal />
-        <Toaster richColors position="top-right" />
-      </QueryClientProvider>
-    </ThemeProvider>
-  ),
+  component: RootLayout,
 });
 
-// Splash
 const splashRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/splash',
+  path: "/",
   component: Splash,
 });
 
-// Home
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/home",
   component: Home,
-  beforeLoad: () => {
-    if (!sessionStorage.getItem('splashShown')) {
-      throw redirect({ to: '/splash' });
-    }
-  },
 });
 
-// Products listing
-const productsRoute = createRoute({
+const discoveryRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/products',
-  component: ProductListing,
-});
-
-// Product detail - keep old param name for compatibility
-const productDetailRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/products/$productId',
-  component: ProductDetail,
-});
-
-// Discover producers
-const discoverRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/discover',
+  path: "/discover",
   component: ProducerDiscovery,
 });
 
-// Producer public profile
 const producerProfileRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/producers/$producerId',
+  path: "/producers/$producerId",
   component: ProducerProfile,
 });
 
-// Producer Dashboard
+const productDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/products/$productId",
+  component: ProductDetail,
+});
+
+const productListingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/products",
+  component: ProductListing,
+});
+
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/dashboard',
+  path: "/dashboard",
   component: ProducerDashboard,
 });
 
-// Legacy dashboard path
-const legacyDashboardRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/producer/dashboard',
-  component: ProducerDashboard,
-});
-
-// Brand Setup
 const brandSetupRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/brand-setup',
+  path: "/brand-setup",
   component: ProducerBrandSetup,
 });
 
-// Orders / My Collection
-const ordersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/orders',
-  component: OrderHistory,
-});
-
-// Collection alias
-const collectionRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/collection',
-  component: OrderHistory,
-});
-
-// Order Confirmation - keep old param name for compatibility
 const orderConfirmationRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/order-confirmation/$orderId',
+  path: "/order-confirmation/$orderId",
   component: OrderConfirmation,
 });
 
-// Live Sessions
-const liveRoute = createRoute({
+const orderHistoryRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/live',
-  component: LiveSessions,
+  path: "/orders",
+  component: OrderHistory,
 });
 
-// Legacy live-sessions path
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: Admin,
+});
+
 const liveSessionsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/live-sessions',
+  path: "/live-sessions",
   component: LiveSessions,
 });
 
 const routeTree = rootRoute.addChildren([
   splashRoute,
   homeRoute,
-  productsRoute,
-  productDetailRoute,
-  discoverRoute,
+  discoveryRoute,
   producerProfileRoute,
+  productDetailRoute,
+  productListingRoute,
   dashboardRoute,
-  legacyDashboardRoute,
   brandSetupRoute,
-  ordersRoute,
-  collectionRoute,
   orderConfirmationRoute,
-  liveRoute,
+  orderHistoryRoute,
+  adminRoute,
   liveSessionsRoute,
 ]);
 
 const router = createRouter({ routeTree });
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
 }
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
 }

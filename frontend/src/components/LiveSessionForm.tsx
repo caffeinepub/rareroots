@@ -1,192 +1,244 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Radio, Play, Square, BookOpen } from 'lucide-react';
-import type { LiveStream } from '../backend';
-import { LiveStreamStatus } from '../backend';
-import { useCreateLiveStream, useUpdateLiveStreamStatus, useUpdateLiveStreamStory } from '../hooks/useQueries';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Plus } from "lucide-react";
+import {
+  useCreateLiveStream,
+  useUpdateLiveStreamStatus,
+  useUpdateLiveStreamStory,
+} from "../hooks/useQueries";
+import type { LiveStream } from "../hooks/useQueries";
+import { LiveStreamStatus } from "../backend";
+import LiveBadge from "./LiveBadge";
+import { toast } from "sonner";
 
 interface LiveSessionFormProps {
   existingStreams: LiveStream[];
-  onSuccess?: () => void;
 }
 
-export default function LiveSessionForm({ existingStreams, onSuccess }: LiveSessionFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [storyUpdates, setStoryUpdates] = useState<Record<string, string>>({});
+export default function LiveSessionForm({ existingStreams }: LiveSessionFormProps) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startTime, setStartTime] = useState("");
+
   const createStream = useCreateLiveStream();
   const updateStatus = useUpdateLiveStreamStatus();
   const updateStory = useUpdateLiveStreamStory();
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) { toast.error('Title is required.'); return; }
-    const startTimestamp = startTime
-      ? BigInt(new Date(startTime).getTime()) * BigInt(1_000_000)
-      : BigInt(Date.now()) * BigInt(1_000_000);
+  const handleCreate = async () => {
+    if (!title.trim() || !startTime) {
+      toast.error("Title and start time are required");
+      return;
+    }
     try {
-      await createStream.mutateAsync({ title: title.trim(), description: description.trim(), startTime: startTimestamp });
-      toast.success('Live session created!');
-      setTitle(''); setDescription(''); setStartTime('');
-      onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to create session.');
+      await createStream.mutateAsync({
+        title: title.trim(),
+        description: description.trim(),
+        startTime: BigInt(new Date(startTime).getTime()) * 1_000_000n,
+      });
+      toast.success("Live session scheduled!");
+      setTitle("");
+      setDescription("");
+      setStartTime("");
+      setShowCreate(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create session";
+      toast.error(msg);
     }
   };
 
-  const handleStatusChange = async (id: string, status: LiveStreamStatus) => {
+  const handleStatusChange = async (id: string, status: string) => {
     try {
-      await updateStatus.mutateAsync({ id, status });
-      toast.success(`Session marked as ${status}.`);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update status.');
+      await updateStatus.mutateAsync({ id, status: status as LiveStreamStatus });
+      toast.success("Status updated");
+    } catch {
+      toast.error("Failed to update status");
     }
   };
 
-  const handleStoryUpdate = async (id: string) => {
-    const story = storyUpdates[id] || '';
+  const handleStoryUpdate = async (id: string, story: string) => {
     try {
       await updateStory.mutateAsync({ id, story });
-      toast.success('Story updated!');
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to update story.');
+      toast.success("Story updated");
+    } catch {
+      toast.error("Failed to update story");
     }
   };
 
   return (
-    <div className="space-y-8">
-      {/* Create New Session */}
-      <div className="bg-card rounded-xl border border-border p-5">
-        <h3 className="font-serif text-lg font-semibold mb-4 flex items-center gap-2">
-          <Radio className="h-4 w-4 text-terracotta" />
-          Schedule a Live Session
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-poppins font-semibold text-earthBrown">
+          Live Sessions ({existingStreams.length})
         </h3>
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="stream-title" className="text-forest font-medium">Session Title *</Label>
+        <Button
+          onClick={() => setShowCreate(!showCreate)}
+          size="sm"
+          className="bg-earthBrown hover:bg-earthBrown/90 text-ivoryCream font-poppins"
+        >
+          <Plus size={14} className="mr-1" /> Schedule
+        </Button>
+      </div>
+
+      {showCreate && (
+        <div className="bg-ivoryCream rounded-xl p-4 space-y-3 border border-earthBrown/20">
+          <div>
+            <Label className="font-poppins text-sm text-earthBrown">Title *</Label>
             <Input
-              id="stream-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Weaving a Traditional Rug Live"
-              required
+              placeholder="Session title"
+              className="mt-1 border-earthBrown/30"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="stream-desc" className="text-forest font-medium">Description</Label>
+          <div>
+            <Label className="font-poppins text-sm text-earthBrown">Description</Label>
             <Textarea
-              id="stream-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What will you be doing? What story will you share?"
+              placeholder="What will you show?"
               rows={2}
-              className="resize-none"
+              className="mt-1 border-earthBrown/30 resize-none"
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="stream-time" className="text-forest font-medium">Scheduled Start Time</Label>
+          <div>
+            <Label className="font-poppins text-sm text-earthBrown">Start Time *</Label>
             <Input
-              id="stream-time"
               type="datetime-local"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              className="mt-1 border-earthBrown/30"
             />
           </div>
-          <Button
-            type="submit"
-            disabled={createStream.isPending}
-            className="bg-terracotta hover:bg-terracotta-dark text-primary-foreground border-0"
-          >
-            {createStream.isPending ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                Creating...
-              </span>
-            ) : 'Schedule Session'}
-          </Button>
-        </form>
-      </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCreate(false)}
+              className="flex-1 border-earthBrown/30 text-earthBrown"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={createStream.isPending}
+              className="flex-1 bg-earthBrown hover:bg-earthBrown/90 text-ivoryCream font-poppins"
+            >
+              {createStream.isPending ? (
+                <Loader2 size={14} className="animate-spin mr-1" />
+              ) : null}
+              Schedule
+            </Button>
+          </div>
+        </div>
+      )}
 
-      {/* Existing Sessions */}
-      {existingStreams.length > 0 && (
+      {existingStreams.length === 0 ? (
+        <div className="text-center py-6 text-earthBrown/50 font-roboto text-sm">
+          No live sessions yet. Schedule your first one!
+        </div>
+      ) : (
         <div className="space-y-3">
-          <h3 className="font-serif text-lg font-semibold">Your Sessions</h3>
           {existingStreams.map((stream) => (
-            <div key={stream.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div>
-                  <h4 className="font-serif font-semibold text-foreground">{stream.title}</h4>
-                  <p className="text-sm text-muted-foreground">{stream.description}</p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {stream.status === LiveStreamStatus.scheduled && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusChange(stream.id, LiveStreamStatus.active)}
-                      disabled={updateStatus.isPending}
-                      className="bg-terracotta hover:bg-terracotta-dark text-primary-foreground border-0"
-                    >
-                      <Play className="h-3.5 w-3.5 mr-1.5" />
-                      Go Live
-                    </Button>
-                  )}
-                  {stream.status === LiveStreamStatus.active && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStatusChange(stream.id, LiveStreamStatus.ended)}
-                      disabled={updateStatus.isPending}
-                    >
-                      <Square className="h-3.5 w-3.5 mr-1.5" />
-                      End Session
-                    </Button>
-                  )}
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    stream.status === LiveStreamStatus.active
-                      ? 'bg-terracotta text-primary-foreground'
-                      : stream.status === LiveStreamStatus.scheduled
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {stream.status === LiveStreamStatus.active ? '● LIVE' : stream.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Story Update */}
-              {stream.status !== LiveStreamStatus.ended && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-forest font-medium flex items-center gap-1">
-                    <BookOpen className="h-3 w-3" /> Update Your Story
-                  </Label>
-                  <div className="flex gap-2">
-                    <Textarea
-                      value={storyUpdates[stream.id] ?? stream.story}
-                      onChange={(e) => setStoryUpdates((prev) => ({ ...prev, [stream.id]: e.target.value }))}
-                      placeholder="Share what you're doing right now..."
-                      rows={2}
-                      className="resize-none text-sm"
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStoryUpdate(stream.id)}
-                      disabled={updateStory.isPending}
-                      className="shrink-0 self-end"
-                    >
-                      Update
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <StreamCard
+              key={stream.id}
+              stream={stream}
+              onStatusChange={handleStatusChange}
+              onStoryUpdate={handleStoryUpdate}
+              isUpdating={updateStatus.isPending || updateStory.isPending}
+            />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+interface StreamCardProps {
+  stream: LiveStream;
+  onStatusChange: (id: string, status: string) => void;
+  onStoryUpdate: (id: string, story: string) => void;
+  isUpdating: boolean;
+}
+
+function StreamCard({ stream, onStatusChange, onStoryUpdate, isUpdating }: StreamCardProps) {
+  const [story, setStory] = useState(stream.story);
+  const [editingStory, setEditingStory] = useState(false);
+
+  return (
+    <div className="bg-white rounded-xl p-3 border border-earthBrown/10 shadow-sm space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {stream.status === LiveStreamStatus.active && <LiveBadge size="sm" />}
+          <p className="font-poppins text-sm font-semibold text-earthBrown truncate">
+            {stream.title}
+          </p>
+        </div>
+        <Select
+          value={stream.status}
+          onValueChange={(v) => onStatusChange(stream.id, v)}
+          disabled={isUpdating}
+        >
+          <SelectTrigger className="w-28 h-7 text-xs border-earthBrown/20 shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(LiveStreamStatus).map((s) => (
+              <SelectItem key={s} value={s} className="text-xs">
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {editingStory ? (
+        <div className="space-y-2">
+          <Textarea
+            value={story}
+            onChange={(e) => setStory(e.target.value)}
+            placeholder="Share your story..."
+            rows={2}
+            className="text-xs border-earthBrown/30 resize-none"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingStory(false)}
+              className="flex-1 h-7 text-xs border-earthBrown/30"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onStoryUpdate(stream.id, story);
+                setEditingStory(false);
+              }}
+              disabled={isUpdating}
+              className="flex-1 h-7 text-xs bg-earthBrown text-ivoryCream"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setEditingStory(true)}
+          className="text-xs text-earthBrown/50 hover:text-earthBrown font-roboto text-left w-full"
+        >
+          {stream.story || "Add story..."}
+        </button>
       )}
     </div>
   );

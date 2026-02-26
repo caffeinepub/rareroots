@@ -1,228 +1,210 @@
-import React, { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import Layout from '../components/Layout';
-import { useGetOrdersByBuyer, useGetAllProducts, useGetAllProducers } from '../hooks/useQueries';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Star, RotateCcw, Package, CheckCircle, Truck, Clock, XCircle } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import Layout from "../components/Layout";
+import { useGetOrdersByBuyer, useGetAllProducts, useGetAllProducers } from "../hooks/useQueries";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { Skeleton } from "@/components/ui/skeleton";
+import BadgePill from "../components/BadgePill";
+import { ShoppingBag, Star, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { OrderStatus } from "../backend";
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  pending: { label: 'Pending', icon: <Clock className="w-4 h-4" />, color: '#DAA520' },
-  confirmed: { label: 'Confirmed', icon: <CheckCircle className="w-4 h-4" />, color: '#4B0082' },
-  shipped: { label: 'Shipped', icon: <Truck className="w-4 h-4" />, color: '#1a73e8' },
-  delivered: { label: 'Delivered ✓', icon: <CheckCircle className="w-4 h-4" />, color: '#228B22' },
-  cancelled: { label: 'Cancelled', icon: <XCircle className="w-4 h-4" />, color: '#FF4500' },
+type FilterStatus = "all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+
+const STATUS_VARIANT: Record<string, "gold" | "green" | "indigo" | "red"> = {
+  pending: "gold",
+  confirmed: "indigo",
+  shipped: "indigo",
+  delivered: "green",
+  cancelled: "red",
 };
 
 export default function OrderHistory() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const [filter, setFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<FilterStatus>("all");
 
-  const { data: orders, isLoading: ordersLoading } = useGetOrdersByBuyer();
-  const { data: products } = useGetAllProducts();
-  const { data: producers } = useGetAllProducers();
+  const { data: orders = [], isLoading: ordersLoading } = useGetOrdersByBuyer();
+  const { data: products = [] } = useGetAllProducts();
+  const { data: producers = [] } = useGetAllProducers();
 
   if (!identity) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center py-20 px-4">
-          <Package className="w-16 h-16 mb-4" style={{ color: '#DAA520' }} />
-          <h2 className="font-poppins font-bold text-xl mb-2" style={{ color: '#8B4513' }}>
-            Login Required
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <ShoppingBag size={48} className="text-earthBrown/30 mb-4" />
+          <h2 className="font-poppins font-bold text-xl text-earthBrown mb-2">
+            Login to View Orders
           </h2>
-          <p className="font-roboto text-center mb-6" style={{ color: '#666' }}>
-            Please login to view your rare collection
+          <p className="font-roboto text-sm text-earthBrown/60 mb-6">
+            Sign in to see your rare collection
           </p>
-          <button
-            onClick={() => navigate({ to: '/dashboard' })}
-            className="btn-primary"
-            style={{ width: 'auto', paddingLeft: '32px', paddingRight: '32px' }}
+          <Button
+            onClick={() => navigate({ to: "/home" })}
+            className="bg-earthBrown text-ivoryCream font-poppins"
           >
-            Login
-          </button>
+            Go Home
+          </Button>
         </div>
       </Layout>
     );
   }
 
-  const getProduct = (productId: string) => products?.find(p => p.id === productId);
-  const getProducer = (producerId: string) => producers?.find(p => p.id.toString() === producerId);
+  const filteredOrders = orders.filter((o) => {
+    if (filter === "all") return true;
+    return o.status === filter;
+  });
 
-  const filteredOrders = orders?.filter(o => {
-    if (filter === 'all') return true;
-    return (o.status as string) === filter;
-  }) ?? [];
-
-  const followedCount = producers?.length ?? 0;
+  const stats = {
+    total: orders.length,
+    delivered: orders.filter((o) => o.status === OrderStatus.delivered).length,
+    pending: orders.filter(
+      (o) => o.status === OrderStatus.pending || o.status === OrderStatus.confirmed
+    ).length,
+  };
 
   return (
     <Layout>
       <div className="px-4 py-4">
-        {/* Header */}
-        <h1 className="font-poppins font-bold mb-2" style={{ fontSize: '24px', color: '#8B4513' }}>
-          My Rare Collection
+        <h1 className="font-poppins font-bold text-xl text-earthBrown mb-4">
+          🛍️ My Rare Collection
         </h1>
 
         {/* Stats */}
-        <div
-          className="rounded-card p-4 mb-5 flex items-center justify-around"
-          style={{ backgroundColor: 'white', boxShadow: '0px 4px 8px rgba(0,0,0,0.1)' }}
-        >
-          <div className="text-center">
-            <p className="font-poppins font-bold text-2xl" style={{ color: '#8B4513' }}>
-              {orders?.length ?? 0}
-            </p>
-            <p className="font-roboto text-xs" style={{ color: '#666' }}>Rare Finds</p>
-          </div>
-          <div className="w-px h-10" style={{ backgroundColor: 'rgba(218,165,32,0.3)' }} />
-          <div className="text-center">
-            <p className="font-poppins font-bold text-2xl" style={{ color: '#4B0082' }}>
-              {followedCount}
-            </p>
-            <p className="font-roboto text-xs" style={{ color: '#666' }}>Following</p>
-          </div>
-          <div className="w-px h-10" style={{ backgroundColor: 'rgba(218,165,32,0.3)' }} />
-          <div className="text-center">
-            <p className="font-poppins font-bold text-2xl" style={{ color: '#228B22' }}>
-              {orders?.filter(o => (o.status as string) === 'delivered').length ?? 0}
-            </p>
-            <p className="font-roboto text-xs" style={{ color: '#666' }}>Delivered</p>
-          </div>
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { label: "Total", value: stats.total, color: "#8B4513" },
+            { label: "Delivered", value: stats.delivered, color: "#228B22" },
+            { label: "In Progress", value: stats.pending, color: "#DAA520" },
+          ].map(({ label, value, color }) => (
+            <div
+              key={label}
+              className="bg-white rounded-xl p-3 text-center shadow-sm border border-earthBrown/10"
+            >
+              <p className="font-poppins font-bold text-xl" style={{ color }}>
+                {value}
+              </p>
+              <p className="font-roboto text-xs text-earthBrown/60">{label}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4" style={{ scrollbarWidth: 'none' }}>
-          {['all', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].map(s => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`region-chip flex-shrink-0 capitalize ${filter === s ? 'active' : ''}`}
-            >
-              {s === 'all' ? 'All Orders' : s}
-            </button>
-          ))}
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+          {(["all", "pending", "confirmed", "shipped", "delivered", "cancelled"] as FilterStatus[]).map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-poppins font-medium transition-colors border capitalize ${
+                  filter === status
+                    ? "bg-earthBrown text-ivoryCream border-earthBrown"
+                    : "bg-white text-earthBrown border-earthBrown/20 hover:border-earthBrown/50"
+                }`}
+              >
+                {status}
+              </button>
+            )
+          )}
         </div>
 
         {/* Orders */}
         {ordersLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-card" />)}
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex gap-3 p-3 bg-white rounded-xl">
+                <Skeleton className="w-16 h-16 rounded-lg shrink-0" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-32 mb-2" />
+                  <Skeleton className="h-3 w-24 mb-1" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-16">
-            <Package className="w-16 h-16 mx-auto mb-4" style={{ color: '#DAA520' }} />
-            <p className="font-poppins font-semibold text-lg" style={{ color: '#8B4513' }}>
-              No orders yet
+          <div className="text-center py-12">
+            <ShoppingBag size={40} className="text-earthBrown/20 mx-auto mb-3" />
+            <p className="font-poppins text-earthBrown/50 text-sm">
+              {filter === "all" ? "No orders yet" : `No ${filter} orders`}
             </p>
-            <p className="font-roboto text-sm mt-2 mb-6" style={{ color: '#666' }}>
-              Discover rare artisan products
-            </p>
-            <button
-              onClick={() => navigate({ to: '/' })}
-              className="btn-primary"
-              style={{ width: 'auto', paddingLeft: '32px', paddingRight: '32px' }}
-            >
-              Start Shopping
-            </button>
+            {filter === "all" && (
+              <Button
+                onClick={() => navigate({ to: "/products" })}
+                className="mt-4 bg-earthBrown text-ivoryCream font-poppins"
+              >
+                Start Shopping
+              </Button>
+            )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredOrders.map(order => {
-              const product = getProduct(order.productId);
-              const producer = product ? getProducer(product.producerId.toString()) : null;
+          <div className="space-y-3">
+            {filteredOrders.map((order) => {
+              const product = products.find((p) => p.id === order.productId);
+              const producer = product
+                ? producers.find(
+                    (pr) => pr.id.toString() === product.producerId.toString()
+                  )
+                : undefined;
+
               const thumbnailUrl = product?.thumbnail
                 ? product.thumbnail.getDirectURL()
-                : '/assets/generated/product-placeholder.dim_600x600.png';
-              const statusKey = order.status as string;
-              const statusInfo = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
-              const isDelivered = (order.status as string) === 'delivered';
+                : "/assets/generated/product-placeholder.dim_600x600.png";
 
               return (
                 <div
                   key={order.id}
-                  className="rounded-card p-4 flex gap-3"
-                  style={{ backgroundColor: 'white', boxShadow: '0px 4px 8px rgba(0,0,0,0.1)' }}
+                  className="bg-white rounded-xl p-3 shadow-sm border border-earthBrown/10"
                 >
-                  {/* Thumbnail */}
-                  <img
-                    src={thumbnailUrl}
-                    alt={product?.title || 'Product'}
-                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/generated/product-placeholder.dim_600x600.png';
-                    }}
-                  />
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className="font-poppins font-semibold text-sm leading-tight truncate"
-                      style={{ color: '#8B4513' }}
-                    >
-                      {product?.title || 'Unknown Product'}
-                    </h3>
-                    <p className="font-roboto text-xs mt-0.5" style={{ color: '#666' }}>
-                      {producer?.brandName || producer?.name || 'Unknown Producer'}
-                    </p>
-
-                    {/* Stars */}
-                    {isDelivered && (
-                      <div className="flex gap-0.5 mt-1">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <Star
-                            key={star}
-                            className="w-3 h-3"
-                            style={{
-                              color: star <= 4 ? '#DAA520' : '#ddd',
-                              fill: star <= 4 ? '#DAA520' : 'none',
-                            }}
-                          />
-                        ))}
+                  <div className="flex gap-3">
+                    <img
+                      src={thumbnailUrl}
+                      alt={product?.title || "Product"}
+                      className="w-16 h-16 rounded-lg object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-poppins text-sm font-semibold text-earthBrown truncate">
+                        {product?.title || "Unknown Product"}
+                      </p>
+                      {producer && (
+                        <p className="font-roboto text-xs text-earthBrown/60 mt-0.5">
+                          by {producer.name}
+                        </p>
+                      )}
+                      <p className="font-roboto text-xs text-earthBrown/50 mt-0.5">
+                        Qty: {Number(order.quantity)} ·{" "}
+                        {new Date(
+                          Number(order.timestamp) / 1_000_000
+                        ).toLocaleDateString("en-IN")}
+                      </p>
+                      <div className="mt-1">
+                        <BadgePill
+                          variant={STATUS_VARIANT[order.status] || "gold"}
+                          size="sm"
+                        >
+                          {order.status}
+                        </BadgePill>
                       </div>
-                    )}
-
-                    {/* Status */}
-                    <div
-                      className="flex items-center gap-1 mt-1"
-                      style={{ color: statusInfo.color }}
-                    >
-                      {statusInfo.icon}
-                      <span className="font-roboto text-xs font-medium">{statusInfo.label}</span>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-3 mt-2">
-                      {product && (
-                        <button
-                          onClick={() => navigate({ to: `/products/${product.id}` })}
-                          className="flex items-center gap-1 font-roboto text-xs"
-                          style={{ color: '#DAA520' }}
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          Re-order
-                        </button>
-                      )}
-                      {isDelivered && producer && (
-                        <button
-                          className="font-roboto text-xs"
-                          style={{ color: '#4B0082' }}
-                          onClick={() => navigate({ to: `/producers/${producer.id.toString()}` })}
-                        >
-                          Rate {producer.brandName || producer.name}
-                        </button>
-                      )}
                     </div>
                   </div>
 
-                  {/* Price */}
-                  <div className="flex-shrink-0 text-right">
-                    <p className="font-poppins font-bold text-sm" style={{ color: '#228B22' }}>
-                      ₹{product ? Number(product.price) * Number(order.quantity) : 0}
-                    </p>
-                    <p className="font-roboto text-xs mt-0.5" style={{ color: '#666' }}>
-                      Qty: {Number(order.quantity)}
-                    </p>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-earthBrown/10">
+                    <button
+                      onClick={() =>
+                        navigate({
+                          to: "/order-confirmation/$orderId",
+                          params: { orderId: order.id },
+                        })
+                      }
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-full text-xs font-poppins border border-earthBrown/20 text-earthBrown hover:bg-earthBrown/5"
+                    >
+                      <RotateCcw size={12} /> View Details
+                    </button>
+                    {order.status === OrderStatus.delivered && (
+                      <button className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-full text-xs font-poppins border border-sandGold/40 text-sandGold hover:bg-sandGold/5">
+                        <Star size={12} /> Rate
+                      </button>
+                    )}
                   </div>
                 </div>
               );

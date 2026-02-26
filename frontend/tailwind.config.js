@@ -42,34 +42,30 @@ export default {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         // Design system tokens
-        'earth-brown': '#8B4513',
-        'sand-gold': '#DAA520',
-        'ivory-cream': '#FFFFF0',
-        'forest-green': '#228B22',
-        'kutch-indigo': '#4B0082',
-        'low-stock': '#FF4500',
+        earthBrown: "#8B4513",
+        sandGold: "#DAA520",
+        ivoryCream: "#FFFFF0",
+        forestGreen: "#228B22",
+        kutchIndigo: "#4B0082",
+        lowStock: "#FF4500",
       },
       fontFamily: {
-        poppins: ['Poppins', 'sans-serif'],
-        roboto: ['Roboto', 'sans-serif'],
-        playfair: ['Playfair Display', 'serif'],
-        sans: ['Roboto', 'sans-serif'],
+        poppins: ["Poppins", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
+        playfair: ["Playfair Display", "serif"],
+        sans: ["Roboto", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        card: "12px",
-        badge: "16px",
-        button: "12px",
+        xl: "12px",
+        "2xl": "16px",
+        full: "9999px",
       },
       boxShadow: {
         card: "0px 4px 8px rgba(0,0,0,0.1)",
         header: "0px 2px 8px rgba(0,0,0,0.08)",
-      },
-      spacing: {
-        '4.5': '18px',
-        '18': '72px',
       },
       keyframes: {
         "accordion-down": {
@@ -84,13 +80,19 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.4" },
         },
+        "stock-alert": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "40%": { opacity: "0.45", transform: "scale(1.05)" },
+          "60%": { opacity: "0.45", transform: "scale(1.05)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "blink-pulse": "blink-pulse 1.2s ease-in-out infinite",
+        "stock-alert": "stock-alert 1s ease-in-out infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-}
+};

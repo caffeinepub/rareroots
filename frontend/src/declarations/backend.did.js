@@ -49,6 +49,7 @@ export const OrderStatus = IDL.Variant({
 });
 export const Order = IDL.Record({
   'id' : IDL.Text,
+  'razorpayPaymentId' : IDL.Opt(IDL.Text),
   'status' : OrderStatus,
   'productId' : IDL.Text,
   'timestamp' : Time,
@@ -59,9 +60,12 @@ export const Producer = IDL.Record({
   'id' : IDL.Principal,
   'bio' : IDL.Text,
   'region' : IDL.Text,
+  'verified' : IDL.Bool,
   'brandLogoBlob' : IDL.Opt(ExternalBlob),
+  'rarityBadge' : IDL.Text,
   'name' : IDL.Text,
   'profilePhoto' : IDL.Opt(ExternalBlob),
+  'whatsApp' : IDL.Text,
   'voiceStoryBlob' : IDL.Opt(ExternalBlob),
   'brandTagline' : IDL.Text,
   'followerCount' : IDL.Nat,
@@ -75,6 +79,7 @@ export const Product = IDL.Record({
   'title' : IDL.Text,
   'rarityBadge' : IDL.Text,
   'thumbnail' : IDL.Opt(ExternalBlob),
+  'liveVideoURL' : IDL.Opt(IDL.Text),
   'producerId' : IDL.Principal,
   'description' : IDL.Text,
   'stock' : IDL.Int,
@@ -82,6 +87,15 @@ export const Product = IDL.Record({
   'price' : IDL.Int,
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text, 'role' : IDL.Text });
+export const ApprovalStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const UserApprovalInfo = IDL.Record({
+  'status' : ApprovalStatus,
+  'principal' : IDL.Principal,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -111,6 +125,8 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'adminApproveProducer' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+  'adminRejectProducer' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'cancelOrder' : IDL.Func([IDL.Text], [], []),
   'createLiveStream' : IDL.Func([IDL.Text, IDL.Text, Time], [IDL.Text], []),
@@ -125,6 +141,8 @@ export const idlService = IDL.Service({
         IDL.Opt(ExternalBlob),
         IDL.Text,
         IDL.Opt(ExternalBlob),
+        IDL.Text,
+        IDL.Text,
       ],
       [],
       [],
@@ -141,11 +159,16 @@ export const idlService = IDL.Service({
         IDL.Opt(ExternalBlob),
         IDL.Text,
         IDL.Opt(IDL.Int),
+        IDL.Opt(IDL.Text),
       ],
       [],
       [],
     ),
-  'createOrder' : IDL.Func([IDL.Text, IDL.Int], [IDL.Text], []),
+  'createOrder' : IDL.Func(
+      [IDL.Text, IDL.Int, IDL.Opt(IDL.Text)],
+      [IDL.Text],
+      [],
+    ),
   'deleteProducer' : IDL.Func([IDL.Principal], [], []),
   'deleteProduct' : IDL.Func([IDL.Text], [], []),
   'followProducer' : IDL.Func([IDL.Principal], [], []),
@@ -177,7 +200,13 @@ export const idlService = IDL.Service({
   'getOrdersByProduct' : IDL.Func([IDL.Text], [IDL.Vec(Order)], ['query']),
   'getOrdersByStatus' : IDL.Func([OrderStatus], [IDL.Vec(Order)], ['query']),
   'getProducer' : IDL.Func([IDL.Principal], [Producer], ['query']),
+  'getProducersByRegion' : IDL.Func([IDL.Text], [IDL.Vec(Producer)], ['query']),
   'getProduct' : IDL.Func([IDL.Text], [Product], ['query']),
+  'getProductsByBrandName' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
   'getProductsByPriceRange' : IDL.Func(
       [IDL.Int, IDL.Int],
       [IDL.Vec(Product)],
@@ -188,20 +217,53 @@ export const idlService = IDL.Service({
       [IDL.Vec(Product)],
       ['query'],
     ),
+  'getProductsByRarityBadge' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
   'getProductsByRegion' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
+  'getProductsByVerifiedProducer' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
   'getProductsInStock' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'getProductsWithLiveVideo' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'getRegionalProductsByProducer' : IDL.Func(
+      [IDL.Principal, IDL.Text],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
+  'getUniqueRegions' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getVerifiedProducerProducts' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
+  'getVerifiedProducers' : IDL.Func([], [IDL.Vec(Producer)], ['query']),
+  'getVerifiedProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'getVerifiedProductsByRegion' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(Product)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
   'isFollowing' : IDL.Func(
       [IDL.Principal, IDL.Principal],
       [IDL.Bool],
       ['query'],
     ),
+  'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'requestApproval' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'unfollowProducer' : IDL.Func([IDL.Principal], [], []),
   'updateLiveStreamStatus' : IDL.Func([IDL.Text, LiveStreamStatus], [], []),
   'updateLiveStreamStory' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -252,6 +314,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Order = IDL.Record({
     'id' : IDL.Text,
+    'razorpayPaymentId' : IDL.Opt(IDL.Text),
     'status' : OrderStatus,
     'productId' : IDL.Text,
     'timestamp' : Time,
@@ -262,9 +325,12 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Principal,
     'bio' : IDL.Text,
     'region' : IDL.Text,
+    'verified' : IDL.Bool,
     'brandLogoBlob' : IDL.Opt(ExternalBlob),
+    'rarityBadge' : IDL.Text,
     'name' : IDL.Text,
     'profilePhoto' : IDL.Opt(ExternalBlob),
+    'whatsApp' : IDL.Text,
     'voiceStoryBlob' : IDL.Opt(ExternalBlob),
     'brandTagline' : IDL.Text,
     'followerCount' : IDL.Nat,
@@ -278,6 +344,7 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'rarityBadge' : IDL.Text,
     'thumbnail' : IDL.Opt(ExternalBlob),
+    'liveVideoURL' : IDL.Opt(IDL.Text),
     'producerId' : IDL.Principal,
     'description' : IDL.Text,
     'stock' : IDL.Int,
@@ -285,6 +352,15 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Int,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text, 'role' : IDL.Text });
+  const ApprovalStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const UserApprovalInfo = IDL.Record({
+    'status' : ApprovalStatus,
+    'principal' : IDL.Principal,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -314,6 +390,8 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'adminApproveProducer' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'adminRejectProducer' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'cancelOrder' : IDL.Func([IDL.Text], [], []),
     'createLiveStream' : IDL.Func([IDL.Text, IDL.Text, Time], [IDL.Text], []),
@@ -328,6 +406,8 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(ExternalBlob),
           IDL.Text,
           IDL.Opt(ExternalBlob),
+          IDL.Text,
+          IDL.Text,
         ],
         [],
         [],
@@ -344,11 +424,16 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(ExternalBlob),
           IDL.Text,
           IDL.Opt(IDL.Int),
+          IDL.Opt(IDL.Text),
         ],
         [],
         [],
       ),
-    'createOrder' : IDL.Func([IDL.Text, IDL.Int], [IDL.Text], []),
+    'createOrder' : IDL.Func(
+        [IDL.Text, IDL.Int, IDL.Opt(IDL.Text)],
+        [IDL.Text],
+        [],
+      ),
     'deleteProducer' : IDL.Func([IDL.Principal], [], []),
     'deleteProduct' : IDL.Func([IDL.Text], [], []),
     'followProducer' : IDL.Func([IDL.Principal], [], []),
@@ -380,7 +465,17 @@ export const idlFactory = ({ IDL }) => {
     'getOrdersByProduct' : IDL.Func([IDL.Text], [IDL.Vec(Order)], ['query']),
     'getOrdersByStatus' : IDL.Func([OrderStatus], [IDL.Vec(Order)], ['query']),
     'getProducer' : IDL.Func([IDL.Principal], [Producer], ['query']),
+    'getProducersByRegion' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Producer)],
+        ['query'],
+      ),
     'getProduct' : IDL.Func([IDL.Text], [Product], ['query']),
+    'getProductsByBrandName' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
     'getProductsByPriceRange' : IDL.Func(
         [IDL.Int, IDL.Int],
         [IDL.Vec(Product)],
@@ -391,20 +486,53 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Product)],
         ['query'],
       ),
+    'getProductsByRarityBadge' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
     'getProductsByRegion' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
+    'getProductsByVerifiedProducer' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
     'getProductsInStock' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'getProductsWithLiveVideo' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'getRegionalProductsByProducer' : IDL.Func(
+        [IDL.Principal, IDL.Text],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
+    'getUniqueRegions' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getVerifiedProducerProducts' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
+    'getVerifiedProducers' : IDL.Func([], [IDL.Vec(Producer)], ['query']),
+    'getVerifiedProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'getVerifiedProductsByRegion' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Product)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
     'isFollowing' : IDL.Func(
         [IDL.Principal, IDL.Principal],
         [IDL.Bool],
         ['query'],
       ),
+    'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'requestApproval' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'unfollowProducer' : IDL.Func([IDL.Principal], [], []),
     'updateLiveStreamStatus' : IDL.Func([IDL.Text, LiveStreamStatus], [], []),
     'updateLiveStreamStory' : IDL.Func([IDL.Text, IDL.Text], [], []),

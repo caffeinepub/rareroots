@@ -1,51 +1,40 @@
-import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { ArrowRight, Leaf } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from "@tanstack/react-router";
 
 export default function HeroSection() {
-  return (
-    <section className="relative overflow-hidden min-h-[520px] flex items-center">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src="/assets/generated/hero-banner.dim_1440x600.png"
-          alt="Artisan crafting"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-forest/85 via-forest/60 to-transparent" />
-      </div>
+  const navigate = useNavigate();
 
-      {/* Content */}
-      <div className="relative container mx-auto px-4 py-20">
-        <div className="max-w-xl">
-          <div className="flex items-center gap-2 mb-4">
-            <Leaf className="h-4 w-4 text-terracotta-light" />
-            <span className="text-sm font-medium text-cream/80 uppercase tracking-widest">
-              Direct from the Source
-            </span>
-          </div>
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-cream leading-tight mb-4">
-            Rare Finds,<br />
-            <span className="text-terracotta-light">Real Stories</span>
-          </h1>
-          <p className="text-cream/85 text-lg mb-8 leading-relaxed">
-            Discover unique regional products crafted by artisan producers. Hear their stories, watch them create, and buy directly — no middlemen.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-terracotta hover:bg-terracotta-dark text-primary-foreground border-0 shadow-artisan">
-              <Link to="/products">
-                Explore Products <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-cream/60 text-cream hover:bg-cream/10 hover:text-cream">
-              <Link to="/live-sessions">
-                Watch Live Sessions
-              </Link>
-            </Button>
-          </div>
+  return (
+    <div className="relative w-full overflow-hidden" style={{ height: "220px" }}>
+      <img
+        src="/assets/generated/hero-banner.dim_1440x600.png"
+        alt="Hero Banner"
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-earthBrown/80 via-earthBrown/40 to-transparent" />
+      <div className="absolute inset-0 flex flex-col justify-center px-6">
+        <h1 className="font-playfair text-ivoryCream text-2xl font-bold leading-tight mb-1">
+          Discover Rare
+          <br />
+          <span className="text-sandGold italic">Artisan Crafts</span>
+        </h1>
+        <p className="font-roboto text-ivoryCream/90 text-sm mb-4">
+          Direct from India's master weavers
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate({ to: "/products" })}
+            className="bg-sandGold text-earthBrown font-poppins font-semibold text-xs px-4 py-2 rounded-full hover:bg-sandGold/90 transition-colors"
+          >
+            Shop Now
+          </button>
+          <button
+            onClick={() => navigate({ to: "/live-sessions" })}
+            className="border border-ivoryCream text-ivoryCream font-poppins text-xs px-4 py-2 rounded-full hover:bg-ivoryCream/10 transition-colors"
+          >
+            Watch Live
+          </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,80 +1,64 @@
-import React from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { Product } from '../backend';
-import BadgePill from './BadgePill';
+import { useNavigate } from "@tanstack/react-router";
+import type { Product } from "../hooks/useQueries";
+import BadgePill from "./BadgePill";
 
 interface ProductCardProps {
   product: Product;
-  accentColor?: string;
 }
 
-export default function ProductCard({ product, accentColor }: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const navigate = useNavigate();
-  const thumbnailUrl = product.thumbnail ? product.thumbnail.getDirectURL() : '/assets/generated/product-placeholder.dim_600x600.png';
+
+  const thumbnailUrl = product.thumbnail
+    ? product.thumbnail.getDirectURL()
+    : "/assets/generated/product-placeholder.dim_600x600.png";
+
   const isLowStock = Number(product.stock) > 0 && Number(product.stock) <= 5;
   const isOutOfStock = Number(product.stock) === 0;
 
   return (
-    <div
-      className="product-card cursor-pointer hover:shadow-lg transition-shadow"
-      style={{ borderRadius: '12px', overflow: 'hidden' }}
-      onClick={() => navigate({ to: `/products/${product.id}` })}
+    <button
+      onClick={() =>
+        navigate({ to: "/products/$productId", params: { productId: product.id } })
+      }
+      className="text-left group w-full"
     >
-      {/* Product Image */}
-      <div className="relative" style={{ height: '140px', overflow: 'hidden' }}>
+      <div className="relative rounded-xl overflow-hidden mb-2 shadow-sm aspect-square">
         <img
           src={thumbnailUrl}
           alt={product.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/assets/generated/product-placeholder.dim_600x600.png';
-          }}
+          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+            isOutOfStock ? "opacity-60" : ""
+          }`}
         />
         {product.rarityBadge && (
           <div className="absolute top-2 left-2">
-            <BadgePill text={`🏷️ ${product.rarityBadge}`} />
-          </div>
-        )}
-        {isLowStock && (
-          <div className="absolute top-2 right-2">
-            <span
-              className="badge-pill animate-blink"
-              style={{ backgroundColor: '#FF4500', fontSize: '11px', height: '28px', padding: '0 8px' }}
-            >
-              ⏳ Only {Number(product.stock)} Left
-            </span>
+            <BadgePill variant="gold" size="sm">
+              {product.rarityBadge}
+            </BadgePill>
           </div>
         )}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <span className="text-white font-poppins font-bold text-sm">Out of Stock</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span className="font-poppins text-white text-xs font-bold bg-black/50 px-2 py-1 rounded-full">
+              Sold Out
+            </span>
+          </div>
+        )}
+        {isLowStock && !isOutOfStock && (
+          <div className="absolute bottom-2 right-2">
+            <BadgePill variant="red" size="sm">
+              Only {Number(product.stock)} left
+            </BadgePill>
           </div>
         )}
       </div>
-
-      {/* Product Info */}
-      <div className="p-3">
-        <h3
-          className="font-poppins font-bold text-sm leading-tight mb-1 line-clamp-2"
-          style={{ color: '#8B4513' }}
-        >
-          {product.title}
-        </h3>
-        <div className="flex items-center justify-between mt-2">
-          <span
-            className="font-poppins font-bold text-base"
-            style={{ color: '#228B22' }}
-          >
-            ₹{Number(product.price).toLocaleString('en-IN')}
-          </span>
-          {accentColor && (
-            <div
-              className="w-3 h-3 rounded-full border border-gray-200"
-              style={{ backgroundColor: accentColor }}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+      <p className="font-poppins text-xs font-semibold text-earthBrown truncate">
+        {product.title}
+      </p>
+      <p className="font-poppins text-sm font-bold text-forestGreen mt-0.5">
+        ₹{Number(product.price).toLocaleString("en-IN")}
+      </p>
+    </button>
   );
 }

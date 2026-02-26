@@ -1,20 +1,20 @@
-import Map "mo:core/Map";
 import Array "mo:core/Array";
-import Time "mo:core/Time";
-import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import List "mo:core/List";
+import Time "mo:core/Time";
 import Int "mo:core/Int";
+import Text "mo:core/Text";
+import Map "mo:core/Map";
 import Order "mo:core/Order";
-import Set "mo:core/Set";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Set "mo:core/Set";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import UserApproval "user-approval/approval";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
-
-
 
 actor {
   include MixinStorage();
@@ -22,6 +22,9 @@ actor {
   // Access control
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  // Approval system
+  let approvalState = UserApproval.initState(accessControlState);
 
   public type UserProfile = {
     name : Text;
@@ -40,6 +43,9 @@ actor {
     brandColor : Text;
     voiceStoryBlob : ?Storage.ExternalBlob;
     followerCount : Nat;
+    verified : Bool;
+    whatsApp : Text;
+    rarityBadge : Text;
   };
 
   public type Product = {
@@ -54,6 +60,7 @@ actor {
     thumbnail : ?Storage.ExternalBlob;
     rarityBadge : Text;
     rarityCountdownEnd : ?Int;
+    liveVideoURL : ?Text;
   };
 
   public type OrderStatus = {
@@ -92,6 +99,7 @@ actor {
     quantity : Int;
     status : OrderStatus;
     timestamp : Time.Time;
+    razorpayPaymentId : ?Text; // New field for Razorpay payment reference
   };
 
   public type LiveStreamStatus = {
@@ -123,6 +131,38 @@ actor {
   let orders = Map.empty<Text, Order>();
   let liveStreams = Map.empty<Text, LiveStream>();
   let followers = Map.empty<Principal, Set.Set<Principal>>();
+
+  // Approval system functions
+  public query ({ caller }) func isCallerApproved() : async Bool {
+    // Admins are always approved
+    if (AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      true;
+    } else {
+      UserApproval.isApproved(approvalState, caller);
+    };
+  };
+
+  public shared ({ caller }) func requestApproval() : async () {
+    // Only authenticated users (not guests/anonymous) can request approval
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only registered users can request approval");
+    };
+    UserApproval.requestApproval(approvalState, caller);
+  };
+
+  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.setApproval(approvalState, user, status);
+  };
+
+  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.listApprovals(approvalState);
+  };
 
   // User Profile functions (required by frontend)
 
@@ -159,9 +199,11 @@ actor {
     brandLogoBlob : ?Storage.ExternalBlob,
     brandColor : Text,
     voiceStoryBlob : ?Storage.ExternalBlob,
+    whatsApp : Text,
+    rarityBadge : Text,
   ) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can create or update producer.");
+      Runtime.trap("Unauthorized: Only users can create or update producer. ");
     };
 
     let existingProducer = switch (producers.get(caller)) {
@@ -179,6 +221,9 @@ actor {
           brandColor = "";
           voiceStoryBlob = null;
           followerCount = 0;
+          verified = false;
+          whatsApp = "";
+          rarityBadge = "";
         };
       };
     };
@@ -194,6 +239,8 @@ actor {
       brandLogoBlob;
       brandColor;
       voiceStoryBlob;
+      whatsApp;
+      rarityBadge;
     };
 
     producers.add(caller, updatedProducer);
@@ -210,6 +257,10 @@ actor {
     producers.values().toArray();
   };
 
+  public query func getVerifiedProducers() : async [Producer] {
+    producers.values().toArray().filter(func(p) { p.verified });
+  };
+
   public shared ({ caller }) func deleteProducer(id : Principal) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can delete producers.");
@@ -218,6 +269,40 @@ actor {
       producers.remove(id);
     } else {
       Runtime.trap("Producer does not exist. ");
+    };
+  };
+
+  public shared ({ caller }) func adminApproveProducer(producerId : Principal) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can approve producers. ");
+    };
+
+    switch (producers.get(producerId)) {
+      case (?producer) {
+        let updatedProducer = {
+          producer with verified = true;
+        };
+        producers.add(producerId, updatedProducer);
+        true;
+      };
+      case (null) { false };
+    };
+  };
+
+  public shared ({ caller }) func adminRejectProducer(producerId : Principal) : async Bool {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can reject producers. ");
+    };
+
+    switch (producers.get(producerId)) {
+      case (?producer) {
+        let updatedProducer = {
+          producer with verified = false;
+        };
+        producers.add(producerId, updatedProducer);
+        true;
+      };
+      case (null) { false };
     };
   };
 
@@ -234,6 +319,7 @@ actor {
     thumbnail : ?Storage.ExternalBlob,
     rarityBadge : Text,
     rarityCountdownEnd : ?Int,
+    liveVideoURL : ?Text,
   ) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can create or update products.");
@@ -243,7 +329,7 @@ actor {
     switch (products.get(id)) {
       case (?existingProduct) {
         if (existingProduct.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: Only the original producer or admins can update this product.");
+          Runtime.trap("Unauthorized: Only the original producer or admins can update this product. ");
         };
       };
       case (null) {};
@@ -261,6 +347,7 @@ actor {
       thumbnail;
       rarityBadge;
       rarityCountdownEnd;
+      liveVideoURL;
     };
 
     products.add(id, product);
@@ -296,11 +383,20 @@ actor {
     products.values().toArray().filter(func(p) { p.stock > 0 });
   };
 
+  public query func getProductsWithLiveVideo() : async [Product] {
+    products.values().toArray().filter(func(p) {
+      switch (p.liveVideoURL) {
+        case (null) { false };
+        case (?url) { url != "" };
+      };
+    });
+  };
+
   public shared ({ caller }) func deleteProduct(id : Text) : async () {
     switch (products.get(id)) {
       case (?product) {
         if (product.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: Only the producer or admins can delete a product.");
+          Runtime.trap("Unauthorized: Only the producer or admins can delete a product. ");
         };
         products.remove(id);
       };
@@ -310,9 +406,9 @@ actor {
 
   // Order CRUD
 
-  public shared ({ caller }) func createOrder(productId : Text, quantity : Int) : async Text {
+  public shared ({ caller }) func createOrder(productId : Text, quantity : Int, razorpayPaymentId : ?Text) : async Text {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only registered users can create orders.");
+      Runtime.trap("Unauthorized: Only registered users can create orders. ");
     };
 
     if (quantity <= 0) {
@@ -336,6 +432,7 @@ actor {
       quantity;
       status = #pending;
       timestamp = now;
+      razorpayPaymentId; // Store the Razorpay payment reference
     };
 
     orders.add(orderId, order);
@@ -357,7 +454,7 @@ actor {
           case (null) { Runtime.trap("Product does not exist") };
         };
         if (order.buyer != caller and product.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: Only the buyer, the producer, or admins can view this order.");
+          Runtime.trap("Unauthorized: Only the buyer, the producer, or admins can view this order. ");
         };
         order;
       };
@@ -386,14 +483,14 @@ actor {
       case (null) { Runtime.trap("Product does not exist") };
     };
     if (product.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only the producer or admins can view orders for this product.");
+      Runtime.trap("Unauthorized: Only the producer or admins can view orders for this product. ");
     };
     orders.values().toArray().filter(func(o) { o.productId == productId });
   };
 
   public query ({ caller }) func getOrdersByStatus(status : OrderStatus) : async [Order] {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view orders by status.");
+      Runtime.trap("Unauthorized: Only admins can view orders by status. ");
     };
     orders.values().toArray().filter(func(o) { o.status == status });
   };
@@ -449,7 +546,7 @@ actor {
 
   public shared ({ caller }) func createLiveStream(title : Text, description : Text, startTime : Time.Time) : async Text {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can create live streams.");
+      Runtime.trap("Unauthorized: Only users can create live streams. ");
     };
 
     let now = Time.now();
@@ -495,7 +592,7 @@ actor {
     };
 
     if (liveStream.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only the producer or admins can update the live stream.");
+      Runtime.trap("Unauthorized: Only the producer or admins can update the live stream. ");
     };
 
     let updatedLiveStream = {
@@ -511,7 +608,7 @@ actor {
     };
 
     if (liveStream.producerId != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only the producer or admins can update the live stream.");
+      Runtime.trap("Unauthorized: Only the producer or admins can update the live stream. ");
     };
 
     let updatedLiveStream = {
@@ -534,6 +631,82 @@ actor {
     };
 
     liveStreamsList.toArray();
+  };
+
+  public query func getVerifiedProducts() : async [Product] {
+    products.values().toArray().filter(func(p) {
+      switch (producers.get(p.producerId)) {
+        case (?producer) { producer.verified };
+        case (null) { false };
+      };
+    });
+  };
+
+  public query func getProductsByVerifiedProducer(producerId : Principal) : async [Product] {
+    switch (producers.get(producerId)) {
+      case (?producer) {
+        if (producer.verified) {
+          products.values().toArray().filter(func(p) { p.producerId == producerId });
+        } else {
+          [];
+        };
+      };
+      case (null) { [] };
+    };
+  };
+
+  public query func getVerifiedProductsByRegion(region : Text) : async [Product] {
+    products.values().toArray().filter(func(p) {
+      switch (producers.get(p.producerId)) {
+        case (?producer) { producer.verified and p.region == region };
+        case (null) { false };
+      };
+    });
+  };
+
+  public query func getUniqueRegions() : async [Text] {
+    let regionSet = Set.empty<Text>();
+
+    for (product in products.values().toArray().values()) {
+      regionSet.add(product.region);
+    };
+
+    regionSet.toArray();
+  };
+
+  public query func getProducersByRegion(region : Text) : async [Producer] {
+    let cleanedRegion = region # "" : Text;
+    producers.values().toArray().filter(func(p) { p.region == cleanedRegion });
+  };
+
+  public query func getProductsByRarityBadge(rarityBadge : Text) : async [Product] {
+    products.values().toArray().filter(func(p) { p.rarityBadge == rarityBadge });
+  };
+
+  public query func getProductsByBrandName(brandName : Text) : async [Product] {
+    products.values().toArray().filter(func(p) {
+      switch (producers.get(p.producerId)) {
+        case (?producer) { producer.brandName == brandName };
+        case (null) { false };
+      };
+    });
+  };
+
+  public query func getRegionalProductsByProducer(producerId : Principal, region : Text) : async [Product] {
+    products.values().toArray().filter(func(p) { p.producerId == producerId and p.region == region });
+  };
+
+  public query func getVerifiedProducerProducts(producerId : Principal) : async [Product] {
+    switch (producers.get(producerId)) {
+      case (?producer) {
+        if (producer.verified) {
+          products.values().toArray().filter(func(p) { p.producerId == producerId });
+        } else {
+          [];
+        };
+      };
+      case (null) { [] };
+    };
   };
 
   // Follower System
@@ -575,7 +748,7 @@ actor {
 
   public shared ({ caller }) func unfollowProducer(producerId : Principal) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can unfollow producers.");
+      Runtime.trap("Unauthorized: Only users can unfollow producers. ");
     };
 
     if (not producers.containsKey(producerId)) {

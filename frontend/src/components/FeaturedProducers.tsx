@@ -1,92 +1,114 @@
-import React from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useGetAllProducts, useGetAllProducers } from '../hooks/useQueries';
-import BadgePill from './BadgePill';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from "@tanstack/react-router";
+import { Skeleton } from "@/components/ui/skeleton";
+import BadgePill from "./BadgePill";
+import type { Product, Producer } from "../hooks/useQueries";
 
-export default function FeaturedProducers() {
+interface FeaturedProducersProps {
+  products: Product[];
+  producers: Producer[];
+  isLoading: boolean;
+  selectedRegion: string;
+}
+
+export default function FeaturedProducers({
+  products,
+  producers,
+  isLoading,
+  selectedRegion,
+}: FeaturedProducersProps) {
   const navigate = useNavigate();
-  const { data: products, isLoading: productsLoading } = useGetAllProducts();
-  const { data: producers } = useGetAllProducers();
 
-  const featuredProducts = products?.filter(p => p.rarityBadge && Number(p.stock) > 0).slice(0, 8) ?? [];
+  const verifiedProducerIds = new Set(producers.map((p) => p.id.toString()));
 
-  const getProducerName = (producerId: string) => {
-    const producer = producers?.find(p => p.id.toString() === producerId);
-    return producer?.brandName || producer?.name || 'Unknown Producer';
-  };
+  const featured = products
+    .filter((product) => {
+      const inStock = Number(product.stock) > 0;
+      const hasRarity = product.rarityBadge && product.rarityBadge.trim() !== "";
+      const regionMatch =
+        selectedRegion === "All" || product.region === selectedRegion;
+      const isVerified = verifiedProducerIds.has(product.producerId.toString());
+      return inStock && hasRarity && regionMatch && isVerified;
+    })
+    .slice(0, 8);
 
-  if (productsLoading) {
-    return (
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {[1, 2, 3].map(i => (
-          <Skeleton key={i} className="flex-shrink-0 w-36 h-52 rounded-card" />
-        ))}
-      </div>
-    );
-  }
-
-  if (featuredProducts.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-400 font-roboto">
-        No featured products yet
-      </div>
-    );
-  }
+  if (!isLoading && featured.length === 0) return null;
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-      {featuredProducts.map((product) => {
-        const thumbnailUrl = product.thumbnail
-          ? product.thumbnail.getDirectURL()
-          : '/assets/generated/product-placeholder.dim_600x600.png';
-        const isLowStock = Number(product.stock) <= 5;
+    <section className="px-4 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-poppins font-semibold text-earthBrown text-base">
+          ✨ Featured Rarities
+        </h2>
+        <button
+          onClick={() => navigate({ to: "/products" })}
+          className="text-xs text-sandGold font-poppins hover:underline"
+        >
+          View all
+        </button>
+      </div>
 
-        return (
-          <div
-            key={product.id}
-            className="flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
-            style={{
-              width: '140px',
-              borderRadius: '12px',
-              backgroundColor: 'white',
-              boxShadow: '0px 4px 8px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-            }}
-            onClick={() => navigate({ to: `/products/${product.id}` })}
-          >
-            {/* Image */}
-            <div style={{ height: '160px', overflow: 'hidden', position: 'relative' }}>
-              <img
-                src={thumbnailUrl}
-                alt={product.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/assets/generated/product-placeholder.dim_600x600.png';
-                }}
-              />
-              {isLowStock && (
-                <div className="absolute top-2 left-2">
-                  <BadgePill text={`🏔️ Only ${Number(product.stock)} Left`} />
-                </div>
-              )}
-            </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="shrink-0 w-36">
+                <Skeleton className="w-36 h-36 rounded-xl mb-2" />
+                <Skeleton className="h-3 w-24 mb-1" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))
+          : featured.map((product) => {
+              const producer = producers.find(
+                (p) => p.id.toString() === product.producerId.toString()
+              );
+              const thumbnailUrl = product.thumbnail
+                ? product.thumbnail.getDirectURL()
+                : "/assets/generated/product-placeholder.dim_600x600.png";
+              const isLowStock = Number(product.stock) <= 3 && Number(product.stock) > 0;
 
-            {/* Info */}
-            <div className="p-2">
-              <p
-                className="font-poppins font-semibold text-xs leading-tight line-clamp-2 mb-1"
-                style={{ color: '#8B4513' }}
-              >
-                {product.title}
-              </p>
-              <p className="font-roboto text-xs" style={{ color: '#666' }}>
-                {getProducerName(product.producerId.toString())}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+              return (
+                <button
+                  key={product.id}
+                  onClick={() =>
+                    navigate({ to: "/products/$productId", params: { productId: product.id } })
+                  }
+                  className="shrink-0 w-36 text-left group"
+                >
+                  <div className="relative w-36 h-36 rounded-xl overflow-hidden mb-2 shadow-sm">
+                    <img
+                      src={thumbnailUrl}
+                      alt={product.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {product.rarityBadge && (
+                      <div className="absolute top-1.5 left-1.5">
+                        <BadgePill variant="gold" size="sm">
+                          {product.rarityBadge}
+                        </BadgePill>
+                      </div>
+                    )}
+                    {isLowStock && (
+                      <div className="absolute bottom-1.5 right-1.5">
+                        <BadgePill variant="red" size="sm">
+                          Only {Number(product.stock)} left
+                        </BadgePill>
+                      </div>
+                    )}
+                  </div>
+                  <p className="font-poppins text-xs font-semibold text-earthBrown truncate">
+                    {product.title}
+                  </p>
+                  {producer && (
+                    <p className="font-roboto text-xs text-earthBrown/60 truncate">
+                      {producer.name}
+                    </p>
+                  )}
+                  <p className="font-poppins text-xs font-bold text-forestGreen mt-0.5">
+                    ₹{Number(product.price).toLocaleString("en-IN")}
+                  </p>
+                </button>
+              );
+            })}
+      </div>
+    </section>
   );
 }

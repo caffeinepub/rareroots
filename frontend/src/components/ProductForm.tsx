@@ -1,255 +1,239 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Upload, Image as ImageIcon, Tag, Clock } from 'lucide-react';
-import type { Product } from '../backend';
-import { ExternalBlob } from '../backend';
-import { useCreateOrUpdateProduct } from '../hooks/useQueries';
-import VoiceNoteRecorder from './VoiceNoteRecorder';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Upload } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { useCreateOrUpdateProduct } from "../hooks/useQueries";
+import type { Product } from "../hooks/useQueries";
+import { ExternalBlob } from "../backend";
+import VoiceNoteRecorder from "./VoiceNoteRecorder";
+import { toast } from "sonner";
+
+const REGIONS = ["Himalayas", "Kutch", "Banarasi", "Tribal", "Northeast"];
 
 interface ProductFormProps {
-  existingProduct?: Product | null;
+  existing?: Product | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-function generateId(): string {
-  return `product_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function toDatetimeLocalString(ts: bigint): string {
-  // ts is nanoseconds from IC
-  const ms = Number(ts) / 1_000_000;
-  const d = new Date(ms);
-  // Format as YYYY-MM-DDTHH:mm
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-export default function ProductForm({ existingProduct, onSuccess, onCancel }: ProductFormProps) {
-  const [title, setTitle] = useState(existingProduct?.title || '');
-  const [description, setDescription] = useState(existingProduct?.description || '');
-  const [price, setPrice] = useState(existingProduct ? Number(existingProduct.price).toString() : '');
-  const [region, setRegion] = useState(existingProduct?.region || '');
-  const [stock, setStock] = useState(existingProduct ? Number(existingProduct.stock).toString() : '');
-  const [thumbnailBlob, setThumbnailBlob] = useState<ExternalBlob | null>(existingProduct?.thumbnail || null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(
-    existingProduct?.thumbnail?.getDirectURL() || null
+export default function ProductForm({ existing, onSuccess, onCancel }: ProductFormProps) {
+  const [title, setTitle] = useState(existing?.title || "");
+  const [description, setDescription] = useState(existing?.description || "");
+  const [price, setPrice] = useState(existing ? String(Number(existing.price)) : "");
+  const [stock, setStock] = useState(existing ? String(Number(existing.stock)) : "");
+  const [region, setRegion] = useState(existing?.region || "");
+  const [rarityBadge, setRarityBadge] = useState(existing?.rarityBadge || "");
+  const [liveVideoURL, setLiveVideoURL] = useState(existing?.liveVideoURL || "");
+  const [rarityCountdownEnd, setRarityCountdownEnd] = useState(
+    existing?.rarityCountdownEnd
+      ? new Date(Number(existing.rarityCountdownEnd) / 1_000_000).toISOString().slice(0, 16)
+      : ""
   );
-  const [voiceNoteBlob, setVoiceNoteBlob] = useState<ExternalBlob | null>(existingProduct?.voiceNote || null);
-  const [thumbUploadProgress, setThumbUploadProgress] = useState(0);
-  const [isThumbUploading, setIsThumbUploading] = useState(false);
-  const [rarityBadge, setRarityBadge] = useState(existingProduct?.rarityBadge || '');
-  const [rarityCountdownEnd, setRarityCountdownEnd] = useState<string>(
-    existingProduct?.rarityCountdownEnd ? toDatetimeLocalString(existingProduct.rarityCountdownEnd) : ''
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailProgress, setThumbnailProgress] = useState(0);
+  const [voiceBlob, setVoiceBlob] = useState<ExternalBlob | null>(
+    existing?.voiceNote || null
   );
+  const [isUploading, setIsUploading] = useState(false);
+
   const mutation = useCreateOrUpdateProduct();
 
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const preview = URL.createObjectURL(file);
-    setThumbnailPreview(preview);
-    setIsThumbUploading(true);
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
-    const blob = ExternalBlob.fromBytes(uint8).withUploadProgress((pct) => setThumbUploadProgress(pct));
-    setThumbnailBlob(blob);
-    setIsThumbUploading(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const priceNum = parseFloat(price);
-    const stockNum = parseInt(stock, 10);
-    if (!title.trim() || !region.trim() || isNaN(priceNum) || isNaN(stockNum)) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
-    if (priceNum < 0 || stockNum < 0) {
-      toast.error('Price and stock must be non-negative.');
+  const handleSubmit = async () => {
+    if (!title.trim() || !price || !stock || !region) {
+      toast.error("Title, price, stock, and region are required");
       return;
     }
 
-    // Convert datetime-local string to nanosecond bigint timestamp
-    let countdownEndBigInt: bigint | null = null;
-    if (rarityCountdownEnd) {
-      const ms = new Date(rarityCountdownEnd).getTime();
-      if (!isNaN(ms)) {
-        countdownEndBigInt = BigInt(ms) * BigInt(1_000_000);
-      }
+    let thumbnail: ExternalBlob | null = existing?.thumbnail || null;
+
+    if (thumbnailFile) {
+      setIsUploading(true);
+      const bytes = new Uint8Array(await thumbnailFile.arrayBuffer());
+      thumbnail = ExternalBlob.fromBytes(bytes).withUploadProgress((pct) =>
+        setThumbnailProgress(pct)
+      );
     }
+
+    const countdownBigInt = rarityCountdownEnd
+      ? BigInt(new Date(rarityCountdownEnd).getTime()) * 1_000_000n
+      : null;
 
     try {
+      const id = existing?.id || `product-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       await mutation.mutateAsync({
-        id: existingProduct?.id || generateId(),
+        id,
         title: title.trim(),
         description: description.trim(),
-        price: BigInt(Math.round(priceNum)),
-        region: region.trim(),
-        stock: BigInt(stockNum),
-        voiceNote: voiceNoteBlob,
-        thumbnail: thumbnailBlob,
+        price: BigInt(Math.round(parseFloat(price))),
+        region,
+        stock: BigInt(Math.round(parseFloat(stock))),
+        voiceNote: voiceBlob,
+        thumbnail,
         rarityBadge: rarityBadge.trim(),
-        rarityCountdownEnd: countdownEndBigInt,
+        rarityCountdownEnd: countdownBigInt,
+        liveVideoURL: liveVideoURL.trim() || null,
       });
-      toast.success(existingProduct ? 'Product updated!' : 'Product created!');
+      toast.success(existing ? "Product updated!" : "Product created!");
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to save product.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save product";
+      toast.error(msg);
+    } finally {
+      setIsUploading(false);
+      setThumbnailProgress(0);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Thumbnail */}
-      <div className="space-y-2">
-        <Label className="text-forest font-medium">Product Thumbnail</Label>
-        <div className="flex items-start gap-4">
-          <div className="h-24 w-24 rounded-lg border-2 border-dashed border-border overflow-hidden bg-accent flex items-center justify-center shrink-0">
-            {thumbnailPreview ? (
-              <img src={thumbnailPreview} alt="Thumbnail" className="h-full w-full object-cover" />
-            ) : (
-              <ImageIcon className="h-8 w-8 text-muted-foreground" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="cursor-pointer">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border text-sm font-medium hover:bg-accent transition-colors">
-                <Upload className="h-4 w-4" />
-                Upload Image
-              </span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleThumbnailChange} />
-            </label>
-            {isThumbUploading && <Progress value={thumbUploadProgress} className="h-1 w-32" />}
-            <p className="text-xs text-muted-foreground">JPG, PNG, WebP up to 10MB</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="product-title" className="text-forest font-medium">Product Title *</Label>
+    <div className="space-y-4">
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Title *</Label>
         <Input
-          id="product-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Ghost Village Shawl"
-          required
+          placeholder="Product title"
+          className="mt-1 border-earthBrown/30"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="product-description" className="text-forest font-medium">Description</Label>
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Description</Label>
         <Textarea
-          id="product-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe your product, its materials, and what makes it special..."
+          placeholder="Describe your product..."
           rows={3}
-          className="resize-none"
+          className="mt-1 border-earthBrown/30 resize-none"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="product-price" className="text-forest font-medium">Price (₹) *</Label>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="font-poppins text-sm text-earthBrown">Price (₹) *</Label>
           <Input
-            id="product-price"
             type="number"
-            min="0"
-            step="1"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="0"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="product-region" className="text-forest font-medium">Region *</Label>
-          <Input
-            id="product-region"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            placeholder="e.g. Himalayas"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="product-stock" className="text-forest font-medium">Stock *</Label>
-          <Input
-            id="product-stock"
-            type="number"
             min="0"
-            step="1"
+            className="mt-1 border-earthBrown/30"
+          />
+        </div>
+        <div>
+          <Label className="font-poppins text-sm text-earthBrown">Stock *</Label>
+          <Input
+            type="number"
             value={stock}
             onChange={(e) => setStock(e.target.value)}
             placeholder="0"
-            required
+            min="0"
+            className="mt-1 border-earthBrown/30"
           />
         </div>
       </div>
 
-      {/* Rarity Fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-accent/50 rounded-lg border border-border">
-        <div className="space-y-1.5">
-          <Label htmlFor="rarity-badge" className="text-forest font-medium flex items-center gap-1.5">
-            <Tag className="h-3.5 w-3.5" /> Rarity Badge
-          </Label>
-          <Input
-            id="rarity-badge"
-            value={rarityBadge}
-            onChange={(e) => setRarityBadge(e.target.value)}
-            placeholder="e.g. Himalayan Secret, Only 3 Left"
-          />
-          <p className="text-xs text-muted-foreground">Optional badge shown on product card</p>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="rarity-countdown" className="text-forest font-medium flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" /> Countdown End
-          </Label>
-          <Input
-            id="rarity-countdown"
-            type="datetime-local"
-            value={rarityCountdownEnd}
-            onChange={(e) => setRarityCountdownEnd(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">Optional FOMO timer end date/time</p>
-        </div>
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Region *</Label>
+        <Select value={region} onValueChange={setRegion}>
+          <SelectTrigger className="mt-1 border-earthBrown/30">
+            <SelectValue placeholder="Select region" />
+          </SelectTrigger>
+          <SelectContent>
+            {REGIONS.map((r) => (
+              <SelectItem key={r} value={r}>
+                {r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Voice Note */}
-      <div className="space-y-2">
-        <Label className="text-forest font-medium">Voice Note</Label>
-        <p className="text-xs text-muted-foreground">Record or upload a voice note telling consumers about this product.</p>
-        <VoiceNoteRecorder
-          onVoiceNoteReady={setVoiceNoteBlob}
-          existingVoiceNote={existingProduct?.voiceNote}
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Rarity Badge</Label>
+        <Input
+          value={rarityBadge}
+          onChange={(e) => setRarityBadge(e.target.value)}
+          placeholder="e.g. Limited Edition, 1-of-1"
+          className="mt-1 border-earthBrown/30"
         />
       </div>
 
-      <div className="flex gap-3 pt-2">
-        <Button
-          type="submit"
-          disabled={mutation.isPending}
-          className="bg-terracotta hover:bg-terracotta-dark text-primary-foreground border-0"
-        >
-          {mutation.isPending ? (
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-              Saving...
-            </span>
-          ) : existingProduct ? 'Update Product' : 'Create Product'}
-        </Button>
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Rarity Countdown End</Label>
+        <Input
+          type="datetime-local"
+          value={rarityCountdownEnd}
+          onChange={(e) => setRarityCountdownEnd(e.target.value)}
+          className="mt-1 border-earthBrown/30"
+        />
+      </div>
+
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Live Video URL</Label>
+        <Input
+          value={liveVideoURL}
+          onChange={(e) => setLiveVideoURL(e.target.value)}
+          placeholder="https://..."
+          className="mt-1 border-earthBrown/30"
+        />
+      </div>
+
+      <div>
+        <Label className="font-poppins text-sm text-earthBrown">Thumbnail</Label>
+        <label className="mt-1 flex items-center gap-2 cursor-pointer border border-dashed border-earthBrown/30 rounded-lg p-3 hover:bg-earthBrown/5 transition-colors">
+          <Upload size={16} className="text-earthBrown/50" />
+          <span className="font-roboto text-sm text-earthBrown/60">
+            {thumbnailFile ? thumbnailFile.name : "Upload thumbnail"}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+          />
+        </label>
+        {isUploading && (
+          <Progress value={thumbnailProgress} className="mt-2 h-1" />
+        )}
+      </div>
+
+      <VoiceNoteRecorder
+        onSave={(blob) => setVoiceBlob(blob)}
+        maxSeconds={30}
+        label="Product Voice Note"
+      />
+
+      <div className="flex gap-2 pt-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="flex-1 border-earthBrown/30 text-earthBrown"
+          >
             Cancel
           </Button>
         )}
+        <Button
+          onClick={handleSubmit}
+          disabled={mutation.isPending || isUploading}
+          className="flex-1 bg-earthBrown hover:bg-earthBrown/90 text-ivoryCream font-poppins"
+        >
+          {mutation.isPending || isUploading ? (
+            <Loader2 size={16} className="animate-spin mr-2" />
+          ) : null}
+          {existing ? "Update Product" : "Create Product"}
+        </Button>
       </div>
-    </form>
+    </div>
   );
 }
